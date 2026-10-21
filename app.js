@@ -201,6 +201,7 @@ function roulette(duree, fin) {
   b.classList.add('tourne');
   b.addEventListener('animationend', terminer, { once: true });
   r.addEventListener('click', terminer, { once: true });
+  setTimeout(terminer, duree + 300); // si le navigateur ralentit l'animation, on ne reste pas bloqué
 }
 
 // ---------- Écran Liste ----------
