@@ -16,6 +16,7 @@ const etat = Object.assign(
     masques: [],
     prix: 'paquet',
     son: false,
+    theme: 'auto', // auto | clair | sombre
   },
   lire(),
 );
@@ -100,7 +101,9 @@ function rendreTirage() {
         <output>${counts[c]}</output>
         <button data-cat="${esc(c)}" data-delta="1" aria-label="Plus : ${esc(c)}">+</button>
       </span></li>`).join('');
-  if (document.activeElement !== $('#budget-valeur')) $('#budget-valeur').value = etat.budget / 100;
+  const champ = $('#budget-valeur');
+  if (document.activeElement !== champ) champ.value = etat.budget / 100;
+  champ.style.width = `${Math.max(2, String(champ.value).length) + 0.4}ch`;
   $('#budget-curseur').value = Math.round(etat.budget / 100);
 
   const min = budgetMinimum(p, counts);
@@ -207,13 +210,13 @@ function rendreListe(anim = false) {
   }
   let n = 0;
   $('#liste').innerHTML = [...groupes.keys()].sort((a, b) => rang(a) - rang(b)).map((r) =>
-    `<h2>${esc(r)}</h2>` + groupes.get(r).sort((a, b) => a.coche - b.coche).map((l) => {
+    `<div class="carte"><p class="surtitre">${esc(r)}</p>` + groupes.get(r).sort((a, b) => a.coche - b.coche).map((l) => {
       const i = parNom.get(l.nom);
       const classes = ['article', l.coche && 'coche', selection.has(l.nom) && 'choisi', anim && 'retourne'].filter(Boolean).join(' ');
       return `<div class="${classes}" data-nom="${esc(l.nom)}" style="--i:${n++}">
         <span>${esc(i.nom)} <span class="poids">· ${quantite(i)}</span></span>
         <span class="prix">${prixAffiche(i)}</span></div>`;
-    }).join(''),
+    }).join('') + '</div>',
   ).join('');
 
   const prix = (ls) => somme(ls.map((l) => parNom.get(l.nom).prix));
@@ -288,8 +291,16 @@ $('#actions').addEventListener('click', (e) => {
     : 'Aucun remplaçant ne rentre dans le budget');
 });
 
-$('#nouveau').addEventListener('click', () => {
-  if (!confirm('Nouveau tirage ? La liste actuelle sera remplacée.')) return;
+// Confirmation dans l'app (certains navigateurs intégrés bloquent confirm()) : 1er tap arme, 2e tap valide.
+$('#nouveau').addEventListener('click', (e) => {
+  const b = e.currentTarget;
+  if (!b.dataset.arme) {
+    b.dataset.arme = '1';
+    b.textContent = 'Remplacer la liste ? Toucher pour confirmer';
+    b.classList.add('alerte');
+    setTimeout(() => { delete b.dataset.arme; b.textContent = 'Nouveau tirage'; b.classList.remove('alerte'); }, 3000);
+    return;
+  }
   etat.liste = null;
   selection.clear();
   sauver();
@@ -312,7 +323,16 @@ $('#partager').addEventListener('click', async () => {
 
 // ---------- Écran Paramètres ----------
 
+function appliquerTheme() {
+  const racine = document.documentElement;
+  if (etat.theme === 'auto') delete racine.dataset.theme;
+  else racine.dataset.theme = etat.theme;
+  document.querySelector('meta[name=theme-color]').content = getComputedStyle(racine).getPropertyValue('--fond').trim();
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appliquerTheme);
+
 function rendreParametres() {
+  document.querySelector(`input[name=theme][value=${etat.theme}]`).checked = true;
   document.querySelector(`input[name=prix][value=${etat.prix}]`).checked = true;
   $('#son').checked = etat.son;
   $('#masques').innerHTML = etat.masques.length
@@ -322,6 +342,8 @@ function rendreParametres() {
 
 document.querySelectorAll('input[name=prix]').forEach((r) =>
   r.addEventListener('change', () => { etat.prix = r.value; sauver(); }));
+document.querySelectorAll('input[name=theme]').forEach((r) =>
+  r.addEventListener('change', () => { etat.theme = r.value; sauver(); appliquerTheme(); }));
 $('#son').addEventListener('change', (e) => {
   etat.son = e.target.checked;
   sauver();
@@ -346,5 +368,6 @@ try {
   base = [];
 }
 parNom = new Map(base.map((i) => [i.nom, i]));
+appliquerTheme();
 afficher(articles().length ? 'liste' : 'tirage');
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
