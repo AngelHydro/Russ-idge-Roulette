@@ -1,0 +1,110 @@
+﻿nom;categorie;rayon;prix;quantite;unite
+Filets de poulet;Viandes et poissons;Boucherie;6,49;500;g
+Steaks hachés 5 % (x4);Viandes et poissons;Boucherie;4,49;400;g
+Côtes de porc;Viandes et poissons;Boucherie;4,29;500;g
+Saucisses de Toulouse;Viandes et poissons;Boucherie;3,99;400;g
+Escalopes de dinde;Viandes et poissons;Boucherie;5,29;400;g
+Bœuf bourguignon;Viandes et poissons;Boucherie;8,49;600;g
+Jambon blanc (4 tranches);Viandes et poissons;Frais;2,49;160;g
+Lardons fumés;Viandes et poissons;Frais;1,89;200;g
+Filets de saumon;Viandes et poissons;Poissonnerie;7,99;250;g
+Filets de cabillaud;Viandes et poissons;Poissonnerie;6,49;300;g
+Thon au naturel;Viandes et poissons;Épicerie;1,99;140;g
+Sardines à l'huile;Viandes et poissons;Épicerie;1,49;135;g
+Maquereaux au vin blanc;Viandes et poissons;Épicerie;1,79;176;g
+Œufs plein air (x6);Œufs et laitages;Frais;2,29;6;pièce
+Yaourts nature (x8);Œufs et laitages;Frais;1,59;1000;g
+Fromage blanc;Œufs et laitages;Frais;1,69;500;g
+Emmental râpé;Œufs et laitages;Frais;1,99;200;g
+Comté;Œufs et laitages;Frais;3,49;200;g
+Mozzarella;Œufs et laitages;Frais;0,99;125;g
+Feta;Œufs et laitages;Frais;1,99;200;g
+Bûche de chèvre;Œufs et laitages;Frais;1,89;180;g
+Crème fraîche épaisse;Œufs et laitages;Frais;1,49;200;ml
+Beurre doux;Œufs et laitages;Frais;2,49;250;g
+Lentilles vertes;Légumineuses;Épicerie;1,35;500;g
+Lentilles corail;Légumineuses;Épicerie;1,89;500;g
+Lentilles beluga;Légumineuses;Épicerie;2,29;500;g
+Pois chiches;Légumineuses;Épicerie;1,09;400;g
+Haricots rouges;Légumineuses;Épicerie;0,99;400;g
+Haricots blancs;Légumineuses;Épicerie;0,99;400;g
+Flageolets;Légumineuses;Épicerie;1,19;400;g
+Pois cassés;Légumineuses;Épicerie;1,29;500;g
+Tofu nature;Légumineuses;Frais;2,19;250;g
+Spaghetti;Féculents;Épicerie;0,89;500;g
+Penne;Féculents;Épicerie;0,89;500;g
+Riz basmati;Féculents;Épicerie;1,99;1000;g
+Riz long grain;Féculents;Épicerie;1,29;1000;g
+Semoule de couscous;Féculents;Épicerie;1,15;1000;g
+Quinoa;Féculents;Épicerie;2,69;500;g
+Boulgour;Féculents;Épicerie;1,59;500;g
+Nouilles chinoises;Féculents;Épicerie;1,39;250;g
+Polenta;Féculents;Épicerie;1,49;500;g
+Gnocchis;Féculents;Frais;1,79;500;g
+Pommes de terre;Féculents;Fruits et légumes;2,49;2500;g
+Patates douces;Féculents;Fruits et légumes;2,99;1000;g
+Courgettes;Légumes;Fruits et légumes;2,49;1000;g
+Carottes;Légumes;Fruits et légumes;1,29;1000;g
+Poivrons (x3);Légumes;Fruits et légumes;2,49;500;g
+Tomates;Légumes;Fruits et légumes;2,99;1000;g
+Oignons jaunes;Légumes;Fruits et légumes;1,49;1000;g
+Brocoli;Légumes;Fruits et légumes;1,79;500;g
+Poireaux;Légumes;Fruits et légumes;2,29;1000;g
+Champignons de Paris;Légumes;Fruits et légumes;1,69;250;g
+Aubergines;Légumes;Fruits et légumes;2,99;1000;g
+Endives;Légumes;Fruits et légumes;2,49;1000;g
+Épinards frais;Légumes;Fruits et légumes;1,99;300;g
+Chou-fleur;Légumes;Fruits et légumes;2,49;1;pièce
+Salade laitue;Légumes;Fruits et légumes;0,99;1;pièce
+Concombre;Légumes;Fruits et légumes;0,89;1;pièce
+Pommes;Fruits;Fruits et légumes;2,99;1500;g
+Bananes;Fruits;Fruits et légumes;1,99;1000;g
+Clémentines;Fruits;Fruits et légumes;2,99;1000;g
+Oranges;Fruits;Fruits et légumes;2,79;1500;g
+Poires;Fruits;Fruits et légumes;2,99;1000;g
+Raisin;Fruits;Fruits et légumes;2,99;500;g
+Citrons;Fruits;Fruits et légumes;1,49;500;g
+Kiwis (x6);Fruits;Fruits et légumes;1,99;6;pièce
+Ananas;Fruits;Fruits et légumes;1,99;1;pièce
+Mangue;Fruits;Fruits et légumes;1,49;1;pièce
+Haricots verts surgelés;Surgelés;Surgelés;1,99;1000;g
+Petits pois surgelés;Surgelés;Surgelés;1,89;1000;g
+Brocolis surgelés;Surgelés;Surgelés;1,79;1000;g
+Épinards hachés surgelés;Surgelés;Surgelés;1,99;1000;g
+Poêlée de légumes;Surgelés;Surgelés;2,49;750;g
+Frites;Surgelés;Surgelés;2,29;1000;g
+Poisson pané;Surgelés;Surgelés;2,99;450;g
+Nuggets de poulet;Surgelés;Surgelés;3,49;400;g
+Pizza margherita;Surgelés;Surgelés;2,49;400;g
+Lasagnes bolognaises;Surgelés;Surgelés;3,49;1000;g
+Glace vanille;Surgelés;Surgelés;2,99;900;ml
+Compotes de pomme (x4);Desserts;Épicerie;1,89;360;g
+Biscuits petit-beurre;Desserts;Épicerie;1,29;200;g
+Cookies;Desserts;Épicerie;1,99;200;g
+Chocolat noir;Desserts;Épicerie;1,99;200;g
+Pâte à tartiner;Desserts;Épicerie;2,99;400;g
+Madeleines;Desserts;Épicerie;1,99;250;g
+Crèmes dessert chocolat (x4);Desserts;Frais;1,49;500;g
+Riz au lait (x4);Desserts;Frais;1,79;400;g
+Mousses au chocolat (x4);Desserts;Frais;1,69;240;g
+Flans nappés caramel (x4);Desserts;Frais;1,39;400;g
+Baguette;Boulangerie;Boulangerie;0,95;250;g
+Pain de mie;Boulangerie;Boulangerie;1,59;500;g
+Pain complet;Boulangerie;Boulangerie;1,89;400;g
+Pain de campagne;Boulangerie;Boulangerie;2,19;500;g
+Brioche tranchée;Boulangerie;Boulangerie;2,29;500;g
+Croissants (x6);Boulangerie;Boulangerie;2,49;6;pièce
+Pains au chocolat (x6);Boulangerie;Boulangerie;2,79;6;pièce
+Pains burger (x4);Boulangerie;Boulangerie;1,69;300;g
+Tortillas (x8);Boulangerie;Épicerie;1,79;320;g
+Biscottes;Boulangerie;Épicerie;1,49;300;g
+Lait demi-écrémé;Boissons;Épicerie;1,05;1000;ml
+Jus d'orange;Boissons;Boissons;1,99;1000;ml
+Jus de pomme;Boissons;Boissons;1,69;1000;ml
+Eau plate (x6);Boissons;Boissons;1,79;9000;ml
+Eau gazeuse (x6);Boissons;Boissons;2,49;6000;ml
+Thé glacé;Boissons;Boissons;1,49;1500;ml
+Soda cola;Boissons;Boissons;1,79;1500;ml
+Sirop de grenadine;Boissons;Boissons;1,99;750;ml
+Café moulu;Boissons;Épicerie;3,49;250;g
+Thé noir (25 sachets);Boissons;Épicerie;1,99;25;pièce

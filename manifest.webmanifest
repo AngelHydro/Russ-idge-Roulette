@@ -1,0 +1,11 @@
+{
+  "name": "Russ'idge Roulette",
+  "short_name": "Russ'idge",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#a8332a",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

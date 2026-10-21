@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#a8332a">
+  <title>Russ'idge Roulette</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section id="ecran-tirage" hidden>
+    <header>
+      <h1>Russ'idge Roulette</h1>
+      <button class="icone" data-ecran="parametres" aria-label="Paramètres">⚙</button>
+    </header>
+    <ul id="categories" class="lignes"></ul>
+    <div class="budget">
+      <label for="budget-valeur">Budget</label>
+      <span><input id="budget-valeur" type="number" inputmode="decimal" min="0" step="0.01"> €</span>
+    </div>
+    <input id="budget-curseur" type="range" min="0" max="200" step="5" aria-label="Budget">
+    <p id="minimum" class="discret"></p>
+    <button id="lancer" class="principal">Lancer la roulette</button>
+  </section>
+
+  <section id="ecran-liste" hidden>
+    <header>
+      <h1>Liste</h1>
+      <span>
+        <button id="partager" class="icone" aria-label="Partager">⤴</button>
+        <button class="icone" data-ecran="parametres" aria-label="Paramètres">⚙</button>
+      </span>
+    </header>
+    <div id="liste"></div>
+    <footer>
+      <p id="message" class="discret" hidden></p>
+      <div id="actions" hidden>
+        <button data-action="relancer">Relancer</button>
+        <button data-action="reste">Relancer le reste</button>
+        <button data-action="masquer">Masquer</button>
+      </div>
+      <div class="totaux"><span id="total"></span><span id="reste" class="discret"></span></div>
+      <button id="nouveau">Nouveau tirage</button>
+    </footer>
+  </section>
+
+  <section id="ecran-parametres" hidden>
+    <header>
+      <h1><button id="retour" class="icone" aria-label="Retour">←</button> Paramètres</h1>
+    </header>
+    <h2>Affichage des prix</h2>
+    <div class="segment">
+      <label><input type="radio" name="prix" value="paquet"> Au paquet</label>
+      <label><input type="radio" name="prix" value="kilo"> Au kilo</label>
+    </div>
+    <h2>Animation</h2>
+    <label class="ligne"><span>Son du clic</span><input type="checkbox" id="son" role="switch"></label>
+    <h2>Masqués</h2>
+    <ul id="masques" class="lignes"></ul>
+  </section>
+
+  <div id="roulette" hidden>
+    <svg class="barillet" viewBox="-50 -50 100 100" aria-hidden="true">
+      <circle r="46" class="corps"/>
+      <circle cy="-27" r="11"/><circle cx="23.4" cy="-13.5" r="11"/><circle cx="23.4" cy="13.5" r="11"/>
+      <circle cy="27" r="11"/><circle cx="-23.4" cy="13.5" r="11"/><circle cx="-23.4" cy="-13.5" r="11"/>
+      <circle r="6"/>
+    </svg>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
