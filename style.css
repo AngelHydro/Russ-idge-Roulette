@@ -76,11 +76,18 @@ button.principal {
 .compteur button { width: 32px; height: 32px; padding: 0; background: none; font-size: 18px; color: var(--accent); }
 .compteur output { min-width: 1.4em; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
 .budget { display: flex; flex-direction: column; gap: 2px; }
-.montant { display: flex; align-items: baseline; gap: 4px; font-size: 34px; font-weight: 700; letter-spacing: -0.02em; }
-.montant input {
-  width: 3.2ch; font: inherit; color: inherit; background: none; border: none; padding: 0;
-  border-bottom: 2px dashed var(--trait);
+/* Pastille autour du montant : signale qu'un tap ouvre le clavier */
+.montant {
+  align-self: flex-start; display: inline-flex; align-items: baseline; gap: 6px;
+  background: var(--pastille); border-radius: 14px; padding: 2px 12px;
+  font-size: 32px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2;
 }
+.montant input {
+  font: inherit; color: inherit; background: none; border: none; padding: 0; margin: 0;
+  text-align: right; outline: none; -moz-appearance: textfield; appearance: textfield;
+}
+.montant input::-webkit-inner-spin-button, .montant input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.montant:focus-within { box-shadow: 0 0 0 2px var(--accent); }
 .montant span { font-size: 20px; color: var(--discret); font-weight: 500; }
 input[type=range] { width: 100%; accent-color: var(--accent); margin: 4px 0; }
 #lancer { margin-top: auto; }

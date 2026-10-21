@@ -103,7 +103,7 @@ function rendreTirage() {
       </span></li>`).join('');
   const champ = $('#budget-valeur');
   if (document.activeElement !== champ) champ.value = etat.budget / 100;
-  champ.style.width = `${Math.max(2, String(champ.value).length) + 0.4}ch`;
+  ajusterChamp();
   $('#budget-curseur').value = Math.round(etat.budget / 100);
 
   const min = budgetMinimum(p, counts);
@@ -130,6 +130,13 @@ $('#budget-curseur').addEventListener('input', (e) => {
   sauver();
   rendreTirage();
 });
+
+// Le champ du budget prend la largeur de son contenu, même pendant la saisie.
+function ajusterChamp() {
+  const champ = $('#budget-valeur');
+  champ.style.width = `${Math.max(1, String(champ.value).length) + 0.2}ch`;
+}
+$('#budget-valeur').addEventListener('input', ajusterChamp);
 
 $('#budget-valeur').addEventListener('change', (e) => {
   const v = parseFloat(String(e.target.value).replace(',', '.'));
