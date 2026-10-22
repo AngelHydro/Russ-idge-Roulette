@@ -1,6 +1,6 @@
 // Hors connexion : réseau d'abord (pour recevoir les nouveaux prix), sinon la copie en cache.
 // ponytail: réseau d'abord = attente du délai réseau si le signal est très faible en magasin ; passer en « cache d'abord » si c'est gênant.
-const CACHE = 'russidge-v4';
+const CACHE = 'russidge-v5';
 const FICHIERS = ['./', 'index.html', 'style.css', 'app.js', 'tirage.js', 'ingredients.csv', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FICHIERS))));
@@ -13,6 +13,7 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     fetch(e.request)
       .then((r) => {
+        if (!r.ok) return caches.match(e.request, { ignoreSearch: true }).then((c) => c || r);
         const copie = r.clone();
         caches.open(CACHE).then((c) => c.put(e.request, copie));
         return r;
