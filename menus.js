@@ -69,23 +69,51 @@ export function composer(noms, parNom, nbMenus, personnes, budget, rand = Math.r
   return completer(menus, parNom, personnes, budget, rand);
 }
 
+// Déplace le rôle `roleMenu` du menu a vers le menu b, et celui de b vers a. Les achats ne changent pas.
+export function echanger(menus, a, b, roleMenu) {
+  const out = copie(menus);
+  [out[a][roleMenu], out[b][roleMenu]] = [out[b][roleMenu], out[a][roleMenu]];
+  return out;
+}
+
+// Chaque nouveau nom prend la place de l'ancien, dans la case de son rôle (un ingrédient sans portion passe en à-côté).
+export function substituer(menus, remplacements, parNom) {
+  return menus.map((m) => {
+    const out = { proteine: [], feculent: [], legume: [], cotes: [] };
+    for (const r of [...ROLES_MENU, 'cotes']) {
+      for (const ancien of m[r]) {
+        const n = remplacements.get(ancien) ?? ancien;
+        const case_ = out[role(parNom.get(n)) === 'cote' ? 'cotes' : role(parNom.get(n))];
+        if (!case_.includes(n)) case_.push(n); // pas deux fois le même ingrédient dans un menu
+      }
+    }
+    return out;
+  });
+}
+
+// ponytail: estimation (les moins chers de chaque catégorie, reprises au plus bas surcoût), pas un minimum garanti.
+export function budgetComplet(pool, counts, nbMenus, personnes) {
+  const pm = poolMenus(pool, personnes);
+  const noms = Object.entries(counts).flatMap(([c, k]) =>
+    [...(pm[c] || [])].sort((a, b) => a.prix - b.prix).slice(0, k).map((i) => i.nom));
+  const parNom = new Map(Object.values(pool).flat().map((i) => [i.nom, i]));
+  const menus = composer(noms, parNom, nbMenus, personnes, Infinity, () => 0);
+  return incomplets(menus) ? Infinity : total(achats(menus, parNom, personnes), parNom);
+}
+
 // ponytail: remplissage glouton, pas optimal ; un autre ordre aurait pu compléter un menu de plus (choix assumé : garder le hasard).
 export function completer(menus, parNom, personnes, budget, rand = Math.random) {
   const out = copie(menus);
   const cout = () => total(achats(out, parNom, personnes), parNom);
 
-  // Réduire : tant que le budget est dépassé, retirer la dernière reprise qui coûte quelque chose.
-  for (let t = cout(); t > budget;) {
+  // Réduire : tant que le budget est dépassé, retirer la dernière reprise (un paquet ne baisse parfois qu'après plusieurs retraits).
+  while (cout() > budget) {
+    const u = usages(out);
     let retire = false;
     for (let k = out.length - 1; k >= 0 && !retire; k--) {
       for (const r of ROLES_MENU) {
-        const u = usages(out);
         const idx = out[k][r].findLastIndex((n) => u.get(n) > 1);
-        if (idx < 0) continue;
-        const [n] = out[k][r].splice(idx, 1);
-        const apres = cout();
-        if (apres < t) { t = apres; retire = true; break; }
-        out[k][r].splice(idx, 0, n); // retrait gratuit : on la garde
+        if (idx >= 0) { out[k][r].splice(idx, 1); retire = true; break; }
       }
     }
     if (!retire) break;
@@ -100,7 +128,7 @@ export function completer(menus, parNom, personnes, budget, rand = Math.random) 
       const candidats = [...u.keys()].filter((n) => role(parNom.get(n)) === r).map((n) => {
         const i = parNom.get(n);
         return { n, surcout: (paquets(i, u.get(n) + 1, personnes) - paquets(i, u.get(n), personnes)) * i.prix };
-      });
+      }).sort((a, b) => a.surcout - b.surcout); // trié : avec rand = () => 0, on prend le moins cher (budgetComplet)
       const gratuits = candidats.filter((c) => c.surcout === 0);
       const possibles = gratuits.length ? gratuits : candidats.filter((c) => t + c.surcout <= budget);
       if (possibles.length) m[r].push(auHasard(possibles, rand).n);

@@ -1,7 +1,7 @@
 // Lancer : node test/menus.test.mjs
 import assert from 'node:assert/strict';
-import { tirer } from '../tirage.js';
-import { role, paquets, poolMenus, achats, total, composer, incomplets } from '../menus.js';
+import { tirer, budgetMinimum } from '../tirage.js';
+import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet } from '../menus.js';
 
 const ing = (nom, categorie, quantite, prix, portion, unite = 'g') => ({ nom, categorie, quantite, prix, portion, unite });
 const poulet = ing('poulet', 'Viandes et poissons', 300, 400, 120);
@@ -62,5 +62,36 @@ for (let n = 0; n < 2000; n++) {
   assert.ok(total(achats(menus, toutPool, personnes), toutPool) <= budget, `budget ${budget} dépassé`);
   for (const i of tires) assert.ok(noms(menus).includes(i.nom), `${i.nom} acheté pour rien`);
 }
+
+// Échanger : les rôles changent de menu, les achats ne bougent pas.
+const avant = composer(tous, parNom, 2, 2, 1970);
+const apres = echanger(avant, 0, 1, 'legume');
+assert.deepEqual(apres[0].legume, avant[1].legume);
+assert.deepEqual(apres[1].legume, avant[0].legume);
+assert.deepEqual([...achats(apres, parNom, 2)].sort(), [...achats(avant, parNom, 2)].sort());
+
+// Substituer : le poulet remplacé par de la crème (sans portion) passe en à-côté.
+const sub = completer(substituer(avant, new Map([['poulet', 'creme']]), parNom), parNom, 2, 99999);
+assert.ok(sub.every((m) => !m.proteine.includes('creme') && !m.proteine.includes('poulet')));
+assert.ok(sub.some((m) => m.cotes.includes('creme')));
+assert.equal(incomplets(sub), 2); // plus aucune protéine à reprendre
+for (let n = 0; n < 500; n++) {
+  const budget = 1570 + Math.floor(Math.random() * 1000); // ≥ coût d'une portion de chacun, comme garanti par tirer/relancer
+  const m = completer(substituer(composer(tous, parNom, 3, 2, budget), new Map([['riz', 'carotte']]), parNom), parNom, 2, budget);
+  assert.ok(cout(m, 2) <= budget);
+}
+// Un à-côté remplacé par un ingrédient à portion rejoint la case de son rôle.
+const versRole = substituer([{ proteine: [], feculent: [], legume: [], cotes: ['creme'] }], new Map([['creme', 'poulet']]), parNom);
+assert.deepEqual(versRole[0].proteine, ['poulet']);
+assert.deepEqual(versRole[0].cotes, []);
+
+// Budget « tous les menus complets ».
+const poolSimple = { 'Viandes et poissons': [poulet], 'Féculents': [riz], 'Légumes': [courgette, carotte], 'Fruits': [banane] };
+const countsSimple = { 'Viandes et poissons': 1, 'Féculents': 1, 'Légumes': 1, 'Fruits': 0 };
+const bc = budgetComplet(poolSimple, countsSimple, 3, 2);
+assert.ok(bc >= budgetMinimum(poolMenus(poolSimple, 2), countsSimple));
+assert.equal(bc, 3 * 400 + 160 + 350); // poulet 3 × 240 g = 3 paquets ; riz 480 g et carotte 1,2 kg tiennent en 1 paquet
+assert.equal(incomplets(composer(['poulet', 'riz', 'carotte'], parNom, 3, 2, bc)), 0);
+assert.equal(budgetComplet(poolSimple, { 'Féculents': 1, 'Légumes': 1 }, 2, 1), Infinity); // pas de protéine
 
 console.log('menus : OK');
