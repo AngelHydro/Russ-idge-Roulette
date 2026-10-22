@@ -1,7 +1,7 @@
 // Lancer : node test/menus.test.mjs
 import assert from 'node:assert/strict';
 import { tirer, budgetMinimum } from '../tirage.js';
-import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit } from '../menus.js';
+import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit, produitsCommencantPar } from '../menus.js';
 
 const ing = (nom, categorie, quantite, prix, portion, unite = 'g') => ({ nom, categorie, quantite, prix, portion, unite });
 const poulet = ing('poulet', 'Viandes et poissons', 300, 400, 120);
@@ -149,6 +149,7 @@ assert.equal(chercherProduit('sel', noms3), 'Sel fin');
 assert.equal(chercherProduit('lait e', noms3), 'Lait entier');
 assert.equal(chercherProduit('lait', noms3), 'Lait'); // le nom exact passe avant les débuts de nom
 assert.equal(chercherProduit('lai', noms3), null); // ambigu
+assert.deepEqual(produitsCommencantPar('LAI', noms3), ['Lait entier', 'Lait de soja', 'Lait']); // pour dire « précise »
 assert.equal(chercherProduit('  ', noms3), null);
 
 console.log('menus : OK');

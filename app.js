@@ -1,6 +1,6 @@
 import { budgetMinimum, tirerVarie } from './tirage.js';
 import {
-  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit,
+  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit, produitsCommencantPar,
 } from './menus.js';
 
 const CATEGORIES = [
@@ -41,7 +41,6 @@ let base = [];
 let parNom = new Map();
 const selection = new Set();
 let ecranCourant = 'tirage';
-let ecranPrecedent = 'tirage';
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -72,6 +71,7 @@ function pool() {
 const achatsMenus = () => (etat.menus ? achats(etat.menus, parNom, etat.personnes) : new Map());
 const reserveAjouts = () => coutAjouts(etat.ajouts, parNom, new Map());
 const budgetTirage = () => etat.budget - reserveAjouts();
+const minimumTirage = (p = pool()) => budgetMinimum(poolMenus(p, etat.personnes), countsEffectifs(p)) + reserveAjouts();
 const totalCourses = () => { const a = achatsMenus(); return total(a, parNom) + coutAjouts(etat.ajouts, parNom, a); };
 
 // Réglages plafonnés au nombre d'ingrédients disponibles.
@@ -97,8 +97,9 @@ function prixAffiche(i) {
   return `${euros(i.prix / i.quantite)}/${i.unite}`;
 }
 
-function afficher(nom) {
-  if (nom !== ecranCourant && nom === 'parametres') ecranPrecedent = ecranCourant;
+// Chaque changement d'écran est une étape de l'historique : le bouton retour du téléphone y revient.
+function afficher(nom, { historique = true } = {}) {
+  if (historique && nom !== ecranCourant) history.pushState({ ecran: nom }, '');
   ecranCourant = nom;
   for (const e of ['tirage', 'menus', 'liste', 'parametres']) $(`#ecran-${e}`).hidden = e !== nom;
   rendre();
@@ -137,7 +138,7 @@ function rendreTirage() {
     `<li><span>${esc(n)}</span><button data-retirer="${esc(n)}" aria-label="Retirer ${esc(n)}">✕</button></li>`).join('');
 
   const reserve = reserveAjouts();
-  const min = budgetMinimum(poolMenus(p, etat.personnes), counts) + reserve;
+  const min = minimumTirage(p);
   const complet = budgetComplet(p, counts, etat.nbMenus, etat.personnes) + reserve;
   const vide = somme(Object.values(counts)) === 0;
   const m = $('#minimum');
@@ -154,7 +155,7 @@ function rendreTirage() {
 function ajouter(saisie) {
   if (!saisie.trim()) return false;
   const nom = chercherProduit(saisie, [...parNom.keys()]);
-  if (!nom) return message('Produit inconnu'), false;
+  if (!nom) return message(produitsCommencantPar(saisie, [...parNom.keys()]).length > 1 ? 'Plusieurs produits correspondent : précise' : 'Produit inconnu'), false;
   // Déjà acheté pour les menus : on ne le réserve pas une deuxième fois.
   if (achatsMenus().has(nom)) return message('Déjà dans la liste'), false;
   message('');
@@ -233,7 +234,7 @@ function lancerTirage({ remplace = false } = {}) {
   const items = reste < 0 ? null : tirerVarie(pm, counts, reste, recents);
   if (!items || !items.length) {
     if (ecranCourant === 'tirage') rendreTirage();
-    const texte = `Budget insuffisant : il faut au moins ${euros(budgetMinimum(pm, counts) + reserveAjouts())}`;
+    const texte = `Budget insuffisant : il faut au moins ${euros(minimumTirage(p))}`;
     if (items && ecranCourant !== 'tirage') message('Aucun ingrédient à tirer');
     else if (!items && ecranCourant === 'tirage') { $('#minimum').textContent = texte; $('#minimum').classList.add('alerte'); }
     else if (!items) message(texte);
@@ -342,14 +343,13 @@ function rendreListe(anim = false) {
   // Un ajout fait après le tirage peut dépasser le budget : on le dit, et on propose de refaire le tirage.
   const depasse = totalListe - etat.budget;
   $('#depassement').hidden = depasse <= 0;
-  $('#depassement span').textContent = `${euros(depasse)} au-dessus du budget`;
-  $('#rentrer').hidden = !etat.menus;
+  const relancable = etat.menus && minimumTirage() <= etat.budget;
+  $('#depassement span').textContent = `${euros(depasse)} au-dessus du budget`
+    + (etat.menus && !relancable ? ' : retire des articles ajoutés, aucun tirage ne rentre avec eux' : '');
+  $('#rentrer').hidden = !relancable;
 }
 
-$('#rentrer').addEventListener('click', () => {
-  if (reserveAjouts() > etat.budget) return message('Les ajouts dépassent le budget à eux seuls');
-  lancerTirage({ remplace: true });
-});
+$('#rentrer').addEventListener('click', () => lancerTirage({ remplace: true }));
 
 function message(texte) {
   for (const m of document.querySelectorAll('.message')) { m.textContent = texte; m.hidden = !texte; }
@@ -583,7 +583,21 @@ $('#masques').addEventListener('click', (e) => {
 });
 
 document.querySelectorAll('[data-ecran]').forEach((b) => b.addEventListener('click', () => afficher(b.dataset.ecran)));
-$('#retour').addEventListener('click', () => afficher(ecranPrecedent));
+$('#retour').addEventListener('click', () => history.back());
+
+// Retour du téléphone. Un écran qui n'a plus lieu d'être est sauté : la liste et les menus d'un tirage effacé,
+// et le Tirage tant qu'une liste est en cours (le remplacer passe par « Nouveau tirage », avec confirmation).
+const enCours = () => Boolean(etat.menus || articles().length);
+const possible = { tirage: () => !enCours(), menus: () => Boolean(etat.menus), liste: () => articles().length > 0, parametres: () => true };
+addEventListener('popstate', (e) => {
+  const nom = e.state?.ecran;
+  if (!possible[nom]) return;
+  if (!possible[nom]() || nom === ecranCourant) return history.back(); // déjà sur cet écran : un retour de plus
+  selection.clear();
+  deplacement = null;
+  message('');
+  afficher(nom, { historique: false });
+});
 
 // ---------- Démarrage ----------
 
@@ -598,9 +612,16 @@ try {
   base = [];
 }
 parNom = new Map(base.map((i) => [i.nom, i]));
-if (etat.menus && base.length) etat.menus = nettoyer(etat.menus, parNom);
+if (base.length) {
+  if (etat.menus) etat.menus = nettoyer(etat.menus, parNom);
+  etat.masques = etat.masques.filter((n) => parNom.has(n));
+  etat.ajouts = etat.ajouts.filter((n) => parNom.has(n));
+  sauver();
+}
 // Suggestions pendant la saisie d'un article à racheter : tous les produits du fichier.
 $('#suggestions').innerHTML = base.map((i) => i.nom).sort((a, b) => a.localeCompare(b, 'fr'))
   .map((n) => `<option value="${esc(n)}"></option>`).join('');
-afficher(articles().length ? 'liste' : 'tirage');
+ecranCourant = articles().length ? 'liste' : 'tirage';
+history.replaceState({ ecran: ecranCourant }, '');
+afficher(ecranCourant, { historique: false });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
