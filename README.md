@@ -29,6 +29,7 @@ Lentilles vertes;Légumineuses;Épicerie;1,35;500;g
 
 - `categorie` : une des 10 catégories de l'app (Viandes et poissons, Œufs et laitages, Légumineuses, Féculents, Légumes, Fruits, Surgelés, Desserts, Boulangerie, Boissons). Un produit surgelé va toujours dans Surgelés.
 - `prix` : prix du paquet en euros. `quantite` + `unite` (`g`, `ml` ou `pièce`) : contenu du paquet, qui sert au prix au kilo.
+- `portion` : quantité par personne et par menu, dans la même unité (repères courants : 80 g de pâtes, 120 g de viande, 200 g de légumes). Elle sert à calculer le nombre de paquets. Vide = à-côté (fruits, desserts, beurre, crème…) : un paquet, hors de l'équilibre des menus.
 - Les prix sont des repères Intermarché (octobre 2026), sans magasin précis : une partie est relevée, le reste estimé en attendant la prochaine mise à jour. Ils sont mis à jour chaque trimestre.
 - Chaque type de produit a sa ligne (penne et coquillettes, tomates rondes et cocktail…) pour varier les tirages et garder un prix proche de ce qui est acheté ; pas de marques.
 
