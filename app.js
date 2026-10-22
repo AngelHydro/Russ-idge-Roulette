@@ -1,4 +1,7 @@
 import { budgetMinimum, tirer, relancer } from './tirage.js';
+import {
+  ROLES_MENU, role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet,
+} from './menus.js';
 
 const CATEGORIES = [
   'Viandes et poissons', 'Œufs et laitages', 'Légumineuses', 'Féculents', 'Légumes',
@@ -12,6 +15,9 @@ const etat = Object.assign(
   {
     counts: { 'Viandes et poissons': 2, 'Œufs et laitages': 1, 'Légumineuses': 1, 'Féculents': 2, 'Légumes': 3, 'Fruits': 2 },
     budget: 4000,
+    nbMenus: 4,
+    personnes: 1,
+    menus: null, // [{ proteine, feculent, legume, cotes }] (voir menus.js)
     liste: null, // [{ nom, coche }]
     masques: [],
     prix: 'paquet',
@@ -84,16 +90,25 @@ function prixAffiche(i) {
 function afficher(nom) {
   if (nom !== ecranCourant && nom === 'parametres') ecranPrecedent = ecranCourant;
   ecranCourant = nom;
-  for (const e of ['tirage', 'liste', 'parametres']) $(`#ecran-${e}`).hidden = e !== nom;
-  ({ tirage: rendreTirage, liste: rendreListe, parametres: rendreParametres })[nom]();
+  for (const e of ['tirage', 'menus', 'liste', 'parametres']) $(`#ecran-${e}`).hidden = e !== nom;
+  ({ tirage: rendreTirage, menus: rendreMenus, liste: rendreListe, parametres: rendreParametres })[nom]();
   window.scrollTo(0, 0);
 }
 
 // ---------- Écran Tirage ----------
 
+const REGLAGES = { nbMenus: ['Menus', 1, 14], personnes: ['Personnes', 1, 8] };
+
 function rendreTirage() {
   const p = pool();
   const counts = countsEffectifs(p);
+  $('#reglages-menus').innerHTML = Object.entries(REGLAGES).map(([cle, [nom]]) => `
+    <li><span>${nom}</span>
+      <span class="compteur">
+        <button data-reglage="${cle}" data-delta="-1" aria-label="Moins : ${nom}">−</button>
+        <output>${etat[cle]}</output>
+        <button data-reglage="${cle}" data-delta="1" aria-label="Plus : ${nom}">+</button>
+      </span></li>`).join('');
   $('#categories').innerHTML = CATEGORIES.map((c) => `
     <li class="${counts[c] ? '' : 'vide'}"><span>${esc(c)}</span>
       <span class="compteur">
@@ -106,14 +121,24 @@ function rendreTirage() {
   ajusterChamp();
   $('#budget-curseur').value = Math.round(etat.budget / 100);
 
-  const min = budgetMinimum(p, counts);
+  const min = budgetMinimum(poolMenus(p, etat.personnes), counts);
+  const complet = budgetComplet(p, counts, etat.nbMenus, etat.personnes);
   const vide = somme(Object.values(counts)) === 0;
   const m = $('#minimum');
   m.textContent = !base.length ? 'Ingrédients introuvables (ingredients.csv)'
     : vide ? 'Choisis au moins un ingrédient'
-    : `Minimum : ${euros(min)}`;
+    : `Minimum : ${euros(min)}` + (complet > min && complet < Infinity ? ` · ${etat.nbMenus} menus complets à partir de ${euros(complet)}` : '');
   m.classList.toggle('alerte', !base.length || vide || min > etat.budget);
 }
+
+$('#reglages-menus').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-reglage]');
+  if (!b) return;
+  const [, mini, maxi] = REGLAGES[b.dataset.reglage];
+  etat[b.dataset.reglage] = Math.max(mini, Math.min(maxi, etat[b.dataset.reglage] + Number(b.dataset.delta)));
+  sauver();
+  rendreTirage();
+});
 
 $('#categories').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-cat]');
@@ -149,17 +174,25 @@ $('#budget-valeur').addEventListener('change', (e) => {
 $('#lancer').addEventListener('click', () => {
   const p = pool();
   const counts = countsEffectifs(p);
-  const items = tirer(p, counts, etat.budget);
+  const pm = poolMenus(p, etat.personnes);
+  const items = tirer(pm, counts, etat.budget);
   if (!items || !items.length) {
     rendreTirage();
-    if (!items) $('#minimum').textContent = `Budget insuffisant : il faut au moins ${euros(budgetMinimum(p, counts))}`;
+    if (!items) $('#minimum').textContent = `Budget insuffisant : il faut au moins ${euros(budgetMinimum(pm, counts))}`;
     return;
   }
-  etat.liste = items.map((i) => ({ nom: i.nom, coche: false }));
+  etat.menus = composer(items.map((i) => i.nom), parNom, etat.nbMenus, etat.personnes, etat.budget);
+  majListe();
   selection.clear();
   sauver();
-  roulette(1500, () => { afficher('liste'); rendreListe(true); });
+  roulette(1500, () => { afficher('menus'); rendreMenus(true); });
 });
+
+// La liste de courses suit les menus : un article par ingrédient acheté, en gardant les coches.
+function majListe() {
+  const coches = new Set((etat.liste || []).filter((l) => l.coche).map((l) => l.nom));
+  etat.liste = [...achats(etat.menus, parNom, etat.personnes).keys()].map((nom) => ({ nom, coche: coches.has(nom) }));
+}
 
 // ---------- Animation ----------
 
@@ -208,8 +241,17 @@ function roulette(duree, fin) {
 
 const rang = (r) => (RAYONS.includes(r) ? RAYONS.indexOf(r) : RAYONS.length);
 
+// Nombre de paquets par article (1 pour une liste faite avant les menus).
+function nbPaquets() {
+  const a = etat.menus ? achats(etat.menus, parNom, etat.personnes) : new Map();
+  return (nom) => a.get(nom) || 1;
+}
+const qteArticle = (i, p) => (p > 1 ? `${p} × ${quantite(i)}` : quantite(i));
+const prixArticles = (lignes, pq) => somme(lignes.map((l) => pq(l.nom) * parNom.get(l.nom).prix));
+
 function rendreListe(anim = false) {
   const lignes = articles();
+  const pq = nbPaquets();
   const groupes = new Map();
   for (const l of lignes) {
     const r = parNom.get(l.nom).rayon;
@@ -220,84 +262,174 @@ function rendreListe(anim = false) {
   $('#liste').innerHTML = [...groupes.keys()].sort((a, b) => rang(a) - rang(b)).map((r) =>
     `<div class="carte"><p class="surtitre">${esc(r)}</p>` + groupes.get(r).sort((a, b) => a.coche - b.coche).map((l) => {
       const i = parNom.get(l.nom);
-      const classes = ['article', l.coche && 'coche', selection.has(l.nom) && 'choisi', anim && 'retourne'].filter(Boolean).join(' ');
+      const classes = ['article', l.coche && 'coche', anim && 'retourne'].filter(Boolean).join(' ');
       return `<div class="${classes}" data-nom="${esc(l.nom)}" style="--i:${n++}">
-        <span>${esc(i.nom)} <span class="poids">· ${quantite(i)}</span></span>
-        <span class="prix">${prixAffiche(i)}</span></div>`;
+        <span>${esc(i.nom)} <span class="poids">· ${qteArticle(i, pq(l.nom))}</span></span>
+        <span class="prix">${etat.prix === 'kilo' ? prixAffiche(i) : euros(pq(l.nom) * i.prix)}</span></div>`;
     }).join('') + '</div>',
   ).join('');
 
-  const prix = (ls) => somme(ls.map((l) => parNom.get(l.nom).prix));
-  $('#total').textContent = `${euros(prix(lignes))} / ${euros(etat.budget)}`;
-  $('#reste').textContent = `Reste ${euros(prix(lignes.filter((l) => !l.coche)))}`;
-  $('#actions').hidden = selection.size === 0;
+  $('#total').textContent = `${euros(prixArticles(lignes, pq))} / ${euros(etat.budget)}`;
+  $('#reste').textContent = `Reste ${euros(prixArticles(lignes.filter((l) => !l.coche), pq))}`;
+  $('#retour-menus').hidden = !etat.menus;
 }
 
 function message(texte) {
-  $('#message').textContent = texte;
-  $('#message').hidden = !texte;
+  for (const m of document.querySelectorAll('.message')) { m.textContent = texte; m.hidden = !texte; }
 }
 
-function basculerSelection(nom) {
-  selection.has(nom) ? selection.delete(nom) : selection.add(nom);
+// Tap et appui long (500 ms) sur les éléments `selecteur` d'un conteneur, sans réagir au défilement.
+function surAppui(conteneur, selecteur, { tap, long }) {
+  let appui = null;
+  const annuler = () => { if (appui) clearTimeout(appui.t); appui = null; };
+  conteneur.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest(selecteur);
+    if (!el) return;
+    const courant = { el, x: e.clientX, y: e.clientY, long: false };
+    if (long) courant.t = setTimeout(() => { courant.long = true; navigator.vibrate?.(15); long(el); }, 500);
+    appui = courant;
+  });
+  conteneur.addEventListener('pointermove', (e) => {
+    if (appui && Math.hypot(e.clientX - appui.x, e.clientY - appui.y) > 10) annuler();
+  });
+  conteneur.addEventListener('pointercancel', annuler);
+  conteneur.addEventListener('pointerup', () => {
+    if (!appui) return;
+    const { el, long: fait } = appui;
+    annuler();
+    if (!fait) tap(el);
+  });
+  conteneur.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+// Liste : un tap coche ou décoche.
+surAppui($('#liste'), '.article', {
+  tap: (el) => {
+    const l = etat.liste.find((x) => x.nom === el.dataset.nom);
+    l.coche = !l.coche;
+    sauver();
+    rendreListe();
+  },
+});
+
+$('#retour-menus').addEventListener('click', () => afficher('menus'));
+
+// ---------- Écran Menus ----------
+
+// Sélection = occurrences « menu|rôle|nom ». `deplacement` = l'occurrence à déplacer, en attente du menu cible.
+let deplacement = null;
+const cleOcc = (k, r, nom) => `${k}|${r}|${nom}`;
+const LIBELLES = { proteine: 'Protéine', legume: 'Légume' };
+const libelle = (r, m) => LIBELLES[r]
+  || (m.feculent.length && m.feculent.every((n) => parNom.get(n)?.categorie === 'Légumineuses') ? 'Légumineuse' : 'Féculent');
+
+function rendreMenus(anim = false) {
+  const menus = etat.menus || [];
+  const occ = (k, r, nom) => `<span class="occ${selection.has(cleOcc(k, r, nom)) ? ' choisi' : ''}"
+    data-menu="${k}" data-role="${r}" data-nom="${esc(nom)}">${esc(nom)}</span>`;
+  $('#menus-surtitre').textContent = `${menus.length} menus · ${etat.personnes} personne${etat.personnes > 1 ? 's' : ''}`;
+  $('#menus').innerHTML = menus.map((m, k) => {
+    const cible = deplacement && deplacement.menu !== k ? ' cible' : '';
+    return `<div class="carte menu${cible}${anim ? ' retourne' : ''}" data-menu="${k}" style="--i:${k}">
+      <h2>Menu ${k + 1}</h2>
+      ${ROLES_MENU.map((r) => `<div class="r"><span>${libelle(r, m)}</span><span>${
+        m[r].length ? m[r].map((n) => occ(k, r, n)).join(', ') : '<span class="manque">manquant</span>'}</span></div>`).join('')}
+      ${m.cotes.length ? `<div class="cotes">+ ${m.cotes.map((n) => occ(k, 'cotes', n)).join(', ')}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Alerte : quels rôles manquent, et pourquoi (rien de tiré, ou budget trop juste pour une reprise).
+  const n = incomplets(menus);
+  const a = $('#alerte-menus');
+  a.hidden = !n;
+  if (n) {
+    const presents = new Set(menus.flatMap((m) => ROLES_MENU.flatMap((r) => m[r].map((nom) => role(parNom.get(nom))))));
+    const manquants = ROLES_MENU.filter((r) => menus.some((m) => !m[r].length));
+    const jamaisTires = manquants.filter((r) => !presents.has(r));
+    a.textContent = `${n} menu${n > 1 ? 's' : ''} sur ${menus.length} incomplet${n > 1 ? 's' : ''} : `
+      + (jamaisTires.length
+        ? `aucun ${jamaisTires.map((r) => ({ proteine: 'protéine', feculent: 'féculent ni légumineuse', legume: 'légume' })[r]).join(', ')} tiré.`
+        : 'le budget ne couvre pas une portion de plus.');
+  }
+
+  $('#total-menus').textContent = `${euros(total(achats(menus, parNom, etat.personnes), parNom))} / ${euros(etat.budget)}`;
+  $('#actions').hidden = selection.size === 0 || !!deplacement;
+}
+
+function basculerOccurrence(el) {
+  const c = cleOcc(el.dataset.menu, el.dataset.role, el.dataset.nom);
+  selection.has(c) ? selection.delete(c) : selection.add(c);
+  deplacement = null;
   message('');
-  rendreListe();
+  rendreMenus();
 }
 
-// Tap = cocher (ou ajuster la sélection en cours), appui long = sélectionner.
-let appui = null;
-const liste = $('#liste');
-liste.addEventListener('pointerdown', (e) => {
-  const a = e.target.closest('.article');
-  if (!a) return;
-  const courant = { nom: a.dataset.nom, x: e.clientX, y: e.clientY, long: false };
-  courant.t = setTimeout(() => {
-    courant.long = true;
-    navigator.vibrate?.(15);
-    basculerSelection(courant.nom);
-  }, 500);
-  appui = courant;
+surAppui($('#menus'), '.occ, .menu', {
+  long: (el) => el.classList.contains('occ') && basculerOccurrence(el),
+  tap: (el) => {
+    const carte = el.closest('.menu');
+    if (deplacement && carte) return deplacerVers(Number(carte.dataset.menu));
+    if (selection.size && el.classList.contains('occ')) basculerOccurrence(el);
+  },
 });
-const annuler = () => { if (appui) clearTimeout(appui.t); appui = null; };
-liste.addEventListener('pointermove', (e) => {
-  if (appui && Math.hypot(e.clientX - appui.x, e.clientY - appui.y) > 10) annuler();
-});
-liste.addEventListener('pointercancel', annuler);
-liste.addEventListener('pointerup', () => {
-  if (!appui) return;
-  const { nom, long } = appui;
-  annuler();
-  if (long) return;
-  if (selection.size) return basculerSelection(nom);
-  const l = etat.liste.find((x) => x.nom === nom);
-  l.coche = !l.coche;
-  sauver();
-  rendreListe();
-});
-liste.addEventListener('contextmenu', (e) => e.preventDefault());
+
+function deplacerVers(k) {
+  const { menu, role: r, nom } = deplacement;
+  deplacement = null;
+  if (k !== menu) {
+    if (r === 'cotes') {
+      etat.menus = etat.menus.map((m, i) => ({ ...m, cotes: i === menu ? m.cotes.filter((n) => n !== nom) : i === k ? [...m.cotes, nom] : m.cotes }));
+    } else {
+      etat.menus = echanger(etat.menus, menu, k, r);
+    }
+    sauver();
+  }
+  selection.clear();
+  message('');
+  rendreMenus();
+}
 
 $('#actions').addEventListener('click', (e) => {
   const action = e.target.closest('button')?.dataset.action;
   if (!action) return;
-  const lignes = articles();
-  const items = lignes.map((l) => parNom.get(l.nom));
-  const cibles = items.map((_, i) => i).filter((i) => (action === 'reste') !== selection.has(items[i].nom));
-  if (action === 'masquer') etat.masques.push(...selection);
+  const choisis = [...selection].map((c) => { const [menu, r, ...nom] = c.split('|'); return { menu: Number(menu), role: r, nom: nom.join('|') }; });
 
-  const nouveaux = cibles.length ? relancer(pool(), items, cibles, etat.budget) : items;
-  if (nouveaux) {
-    etat.liste = nouveaux.map((it, i) => ({ nom: it.nom, coche: cibles.includes(i) ? false : lignes[i].coche }));
-  } else if (action === 'masquer') {
-    etat.liste = lignes.filter((l) => !selection.has(l.nom));
+  if (action === 'deplacer') {
+    if (choisis.length !== 1) return message('Sélectionne un seul ingrédient à déplacer');
+    deplacement = choisis[0];
+    rendreMenus();
+    return message('Touche le menu où le mettre');
   }
+
+  // Relancer / Relancer le reste / Masquer : les remplaçants prennent la place des anciens, dans les mêmes menus.
+  const nomsChoisis = new Set(choisis.map((c) => c.nom));
+  const noms = [...achats(etat.menus, parNom, etat.personnes).keys()];
+  const items = noms.map((n) => ({ ...parNom.get(n), prix: paquets(parNom.get(n), 1, etat.personnes) * parNom.get(n).prix }));
+  const cibles = noms.map((_, i) => i).filter((i) => (action === 'reste') !== nomsChoisis.has(noms[i]));
+  if (action === 'masquer') etat.masques.push(...nomsChoisis);
+
+  const nouveaux = cibles.length ? relancer(poolMenus(pool(), etat.personnes), items, cibles, etat.budget) : items;
+  if (nouveaux) {
+    const remplacements = new Map(cibles.map((i) => [noms[i], nouveaux[i].nom]));
+    etat.menus = completer(substituer(etat.menus, remplacements, parNom), parNom, etat.personnes, etat.budget);
+  } else if (action === 'masquer') {
+    const garder = (ns) => ns.filter((n) => !nomsChoisis.has(n));
+    etat.menus = completer(etat.menus.map((m) => ({ proteine: garder(m.proteine), feculent: garder(m.feculent), legume: garder(m.legume), cotes: garder(m.cotes) })),
+      parNom, etat.personnes, etat.budget);
+  }
+  // Un article remplacé est un nouvel article : il repart décoché.
+  if (nouveaux) etat.liste = (etat.liste || []).filter((l) => !cibles.some((i) => noms[i] === l.nom && nouveaux[i].nom !== l.nom));
+  majListe();
   selection.clear();
   sauver();
-  if (nouveaux && cibles.length) roulette(400, rendreListe);
-  else rendreListe();
+  if (nouveaux && cibles.length) roulette(400, rendreMenus);
+  else rendreMenus();
   message(nouveaux ? '' : action === 'masquer'
     ? 'Masqué, mais aucun remplaçant ne rentre dans le budget'
     : 'Aucun remplaçant ne rentre dans le budget');
 });
+
+$('#voir-liste').addEventListener('click', () => { selection.clear(); deplacement = null; message(''); afficher('liste'); });
 
 // Confirmation dans l'app (certains navigateurs intégrés bloquent confirm()) : 1er tap arme, 2e tap valide.
 let armeNouveau = null;
@@ -316,6 +448,7 @@ $('#nouveau').addEventListener('click', (e) => {
   }
   desarmerNouveau(); // sinon le tirage suivant pourrait être effacé d'un seul tap
   etat.liste = null;
+  etat.menus = null;
   selection.clear();
   sauver();
   message('');
@@ -324,11 +457,12 @@ $('#nouveau').addEventListener('click', (e) => {
 
 $('#partager').addEventListener('click', async () => {
   const lignes = articles();
+  const pq = nbPaquets();
   const texte = [...new Set(lignes.map((l) => parNom.get(l.nom).rayon))]
     .sort((a, b) => rang(a) - rang(b))
     .map((r) => `${r}\n` + lignes.filter((l) => parNom.get(l.nom).rayon === r)
-      .map((l) => `${l.coche ? '✓' : '-'} ${l.nom} (${quantite(parNom.get(l.nom))})`).join('\n'))
-    .join('\n\n') + `\n\nTotal : ${euros(somme(lignes.map((l) => parNom.get(l.nom).prix)))}`;
+      .map((l) => `${l.coche ? '✓' : '-'} ${l.nom} (${qteArticle(parNom.get(l.nom), pq(l.nom))})`).join('\n'))
+    .join('\n\n') + `\n\nTotal : ${euros(prixArticles(lignes, pq))}`;
   try {
     if (navigator.share) await navigator.share({ title: 'Liste de courses', text: texte });
     else { await navigator.clipboard.writeText(texte); message('Liste copiée'); }

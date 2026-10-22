@@ -70,7 +70,7 @@ button.principal {
 }
 
 /* Écran Tirage : tout doit tenir sur un écran de téléphone */
-#categories li { padding: 5px 0; }
+#categories li, #reglages-menus li { padding: 5px 0; }
 #categories li.vide > span:first-child { color: var(--discret); }
 .compteur { display: flex; align-items: center; gap: 2px; background: var(--pastille); border-radius: 999px; padding: 3px; }
 .compteur button { width: 32px; height: 32px; padding: 0; background: none; font-size: 18px; color: var(--accent); }
@@ -106,7 +106,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); margin: 4px 0; }
 .article.coche { color: var(--discret); text-decoration: line-through; }
 .article.coche .prix { font-weight: 400; }
 .article.choisi { background: var(--accent-pale); color: var(--accent); border-bottom-color: transparent; }
-.article.retourne { animation: retourne .35s both; animation-delay: calc(var(--i) * 70ms); }
+.retourne { animation: retourne .35s both; animation-delay: calc(var(--i) * 70ms); }
 @keyframes retourne { from { transform: rotateX(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
 
 footer {
@@ -120,6 +120,23 @@ footer {
 #total { font-size: 22px; font-weight: 700; }
 #reste { font-weight: 600; }
 #nouveau { color: var(--discret); }
+
+#retour-menus { color: var(--discret); }
+
+/* Écran Menus */
+#menus { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.menu h2 { margin: 0 0 4px; font-size: 15px; }
+.menu .r { display: flex; gap: 8px; padding: 3px 0; }
+.menu .r > span:first-child { width: 92px; flex: none; color: var(--discret); font-size: 13px; padding-top: 2px; }
+.menu .cotes { color: var(--discret); font-size: 14px; margin-top: 2px; }
+.menu.cible { box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
+.occ {
+  border-radius: 8px; padding: 1px 4px; margin: -1px -4px; cursor: pointer;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y;
+}
+.occ.choisi { background: var(--accent-pale); color: var(--accent); }
+.manque { color: var(--accent); font-style: italic; }
+#alerte-menus { margin: 0; background: var(--accent-pale); color: var(--accent); border-radius: 14px; padding: 8px 12px; font-size: 14px; }
 
 /* Écran Paramètres */
 .segment { display: flex; background: var(--pastille); border-radius: 999px; padding: 3px; margin-top: 6px; }
@@ -150,5 +167,5 @@ input[role=switch]:checked::after { transform: translateX(18px); background: var
 @keyframes tourne { from { transform: rotate(0); } to { transform: rotate(1140deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .barillet.tourne, .article.retourne { animation-duration: .01s; }
+  .barillet.tourne, .retourne { animation-duration: .01s; }
 }

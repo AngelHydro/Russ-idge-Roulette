@@ -19,6 +19,7 @@
       </div>
       <button class="icone" data-ecran="parametres" aria-label="Paramètres">⚙</button>
     </header>
+    <ul id="reglages-menus" class="carte lignes"></ul>
     <ul id="categories" class="carte lignes"></ul>
     <div class="carte budget">
       <label for="budget-valeur" class="surtitre">Budget</label>
@@ -27,6 +28,31 @@
       <p id="minimum" class="discret"></p>
     </div>
     <button id="lancer" class="principal">Lancer la roulette</button>
+  </section>
+
+  <section id="ecran-menus" hidden>
+    <header>
+      <div>
+        <p id="menus-surtitre" class="surtitre"></p>
+        <h1>Mes menus</h1>
+      </div>
+      <button class="icone" data-ecran="parametres" aria-label="Paramètres">⚙</button>
+    </header>
+    <p id="alerte-menus" hidden></p>
+    <div id="menus"></div>
+    <footer>
+      <p class="message discret" hidden></p>
+      <div id="actions" hidden>
+        <button data-action="deplacer">Déplacer</button>
+        <button data-action="relancer">Relancer</button>
+        <button data-action="reste">Relancer le reste</button>
+        <button data-action="masquer">Masquer</button>
+      </div>
+      <div class="carte totaux">
+        <div><p class="surtitre">Total</p><span id="total-menus"></span></div>
+      </div>
+      <button id="voir-liste" class="principal">Voir la liste de courses</button>
+    </footer>
   </section>
 
   <section id="ecran-liste" hidden>
@@ -42,16 +68,12 @@
     </header>
     <div id="liste"></div>
     <footer>
-      <p id="message" class="discret" hidden></p>
-      <div id="actions" hidden>
-        <button data-action="relancer">Relancer</button>
-        <button data-action="reste">Relancer le reste</button>
-        <button data-action="masquer">Masquer</button>
-      </div>
+      <p class="message discret" hidden></p>
       <div class="carte totaux">
         <div><p class="surtitre">Total</p><span id="total"></span></div>
         <div class="droite"><p class="surtitre">Reste à acheter</p><span id="reste"></span></div>
       </div>
+      <button id="retour-menus">← Menus</button>
       <button id="nouveau">Nouveau tirage</button>
     </footer>
   </section>
