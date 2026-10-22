@@ -1,6 +1,6 @@
 // Lancer : node test/tirage.test.mjs
 import assert from 'node:assert/strict';
-import { budgetMinimum, tirer, relancer } from '../tirage.js';
+import { budgetMinimum, tirer, relancer, tirerVarie } from '../tirage.js';
 
 const ing = (nom, categorie, prix) => ({ nom, categorie, prix });
 const pool = {
@@ -35,5 +35,14 @@ assert.deepEqual(serre, ['a', 'd', 'p']);
 // Relance avec un remplaçant différent quand le budget le permet.
 const base = [pool.V[0], pool.V[3], pool.F[0]]; // a, d, p = 240
 assert.notEqual(relancer(pool, base, [0], 1000)[0].nom, 'a');
+
+// Variété : les ingrédients récents sont évités quand c'est possible, jamais au prix d'un échec.
+for (let n = 0; n < 500; n++) {
+  assert.ok(!tirerVarie(pool, counts, 5000, new Set(['a'])).some((i) => i.nom === 'a'));
+}
+const petit = { V: [ing('a', 'V', 100), ing('b', 'V', 200)] };
+assert.deepEqual(tirerVarie(petit, { V: 2 }, 5000, new Set(['a'])).map((i) => i.nom).sort(), ['a', 'b']); // pas assez sans récent
+assert.deepEqual(tirerVarie(pool, counts, 240, new Set(['d'])).map((i) => i.nom).sort(), ['a', 'd', 'p']); // le budget l'exige
+assert.equal(tirerVarie(pool, counts, 5000, new Set(['inconnu'])).length, 3);
 
 console.log('tirage : OK');

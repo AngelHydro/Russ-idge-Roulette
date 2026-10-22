@@ -70,6 +70,16 @@ export function tirer(pool, counts, budget, rand = Math.random) {
   return remplir(pool, cats, [], budget, [], rand);
 }
 
+// Comme `tirer`, en évitant les noms de `recents` dans chaque catégorie qui en a assez d'autres ;
+// si le budget ne passe pas sans eux, on retente avec tout (la variété est une préférence).
+export function tirerVarie(pool, counts, budget, recents, rand = Math.random) {
+  const varie = Object.fromEntries(Object.entries(pool).map(([c, items]) => {
+    const autres = items.filter((i) => !recents.has(i.nom));
+    return [c, autres.length >= (counts[c] || 0) ? autres : items];
+  }));
+  return tirer(varie, counts, budget, rand) || tirer(pool, counts, budget, rand);
+}
+
 // Relance les ingrédients aux positions `indices` : chacun est remplacé par un autre de sa catégorie.
 // Si aucun remplaçant différent ne rentre dans le budget, on autorise de retomber sur les mêmes.
 export function relancer(pool, items, indices, budget, rand = Math.random) {
