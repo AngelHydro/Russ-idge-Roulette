@@ -57,9 +57,10 @@ export function chercherProduit(saisie, noms) {
   const k = cleSaisie(saisie);
   const exact = noms.find((n) => cleSaisie(n) === k);
   if (exact || !k) return exact ?? null;
-  const debut = noms.filter((n) => cleSaisie(n).startsWith(k)); // « sel » → « Sel fin », mais « lait » reste ambigu
+  const debut = produitsCommencantPar(saisie, noms); // « sel » → « Sel fin », mais « lait » reste ambigu
   return debut.length === 1 ? debut[0] : null;
 }
+export const produitsCommencantPar = (saisie, noms) => noms.filter((n) => cleSaisie(n).startsWith(cleSaisie(saisie)));
 
 // Articles à racheter : un paquet chacun, sauf ceux déjà achetés pour les menus ; les noms inconnus sont ignorés.
 export const coutAjouts = (ajouts, parNom, achatsMap) =>

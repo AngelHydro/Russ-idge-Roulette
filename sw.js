@@ -3,7 +3,7 @@
 // Changer CACHE à chaque modification des fichiers de l'app, sinon les téléphones gardent l'ancienne version.
 // Prix (ingredients.csv) : réseau d'abord, pour recevoir les mises à jour sans changer CACHE ; au bout de 3 s, la copie
 // en cache répond (le réseau continue en arrière-plan et la remplace pour la fois suivante).
-const CACHE = 'russidge-v8';
+const CACHE = 'russidge-v9';
 const FICHIERS = ['./', 'index.html', 'style.css', 'app.js', 'tirage.js', 'menus.js', 'ingredients.csv', 'manifest.webmanifest', 'icon.svg'];
 const DELAI_PRIX = 3000;
 
