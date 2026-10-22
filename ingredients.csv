@@ -31,8 +31,8 @@ Surimi;Viandes et poissons;Frais;1,90;250;g;100
 Filets de colin;Viandes et poissons;Poissonnerie;5,90;400;g;120
 Moules;Viandes et poissons;Poissonnerie;4,99;1000;g;400
 Œufs plein air (x6);Œufs et laitages;Frais;2,10;6;pièce;2
-Yaourts nature (x16);Œufs et laitages;Frais;2,25;2000;g;
-Fromage blanc;Œufs et laitages;Frais;1,98;1000;g;
+Yaourts nature (x16);Desserts;Frais;2,25;2000;g;
+Fromage blanc;Desserts;Frais;1,98;1000;g;
 Emmental râpé;Œufs et laitages;Frais;1,65;200;g;
 Comté;Œufs et laitages;Frais;3,72;200;g;60
 Mozzarella;Œufs et laitages;Frais;0,93;125;g;60
@@ -40,10 +40,10 @@ Feta;Œufs et laitages;Frais;3,39;150;g;60
 Bûche de chèvre;Œufs et laitages;Frais;3,93;400;g;60
 Crème fraîche épaisse;Œufs et laitages;Frais;1,77;445;g;
 Beurre doux;Œufs et laitages;Frais;2,62;250;g;
-Yaourts aux fruits (x12);Œufs et laitages;Frais;2,60;1500;g;
-Yaourts à la grecque (x4);Œufs et laitages;Frais;2,10;600;g;
-Skyr;Œufs et laitages;Frais;2,50;450;g;
-Petits-suisses (x12);Œufs et laitages;Frais;1,90;720;g;
+Yaourts aux fruits (x12);Desserts;Frais;2,60;1500;g;
+Yaourts à la grecque (x4);Desserts;Frais;2,10;600;g;
+Skyr;Desserts;Frais;2,50;450;g;
+Petits-suisses (x12);Desserts;Frais;1,90;720;g;
 Camembert;Œufs et laitages;Frais;1,40;250;g;60
 Brie;Œufs et laitages;Frais;2,20;300;g;60
 Fromage à raclette;Œufs et laitages;Frais;5,90;400;g;200

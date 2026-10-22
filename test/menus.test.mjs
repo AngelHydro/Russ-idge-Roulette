@@ -1,7 +1,7 @@
 // Lancer : node test/menus.test.mjs
 import assert from 'node:assert/strict';
 import { tirer, budgetMinimum } from '../tirage.js';
-import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte } from '../menus.js';
+import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun } from '../menus.js';
 
 const ing = (nom, categorie, quantite, prix, portion, unite = 'g') => ({ nom, categorie, quantite, prix, portion, unite });
 const poulet = ing('poulet', 'Viandes et poissons', 300, 400, 120);
@@ -65,10 +65,37 @@ for (let n = 0; n < 2000; n++) {
 
 // Échanger : les rôles changent de menu, les achats ne bougent pas.
 const avant = composer(tous, parNom, 2, 2, 1970);
-const apres = echanger(avant, 0, 1, 'legume');
+const apres = echanger(avant, 0, 1, 'legume', avant[0].legume[0]);
 assert.deepEqual(apres[0].legume, avant[1].legume);
 assert.deepEqual(apres[1].legume, avant[0].legume);
 assert.deepEqual([...achats(apres, parNom, 2)].sort(), [...achats(avant, parNom, 2)].sort());
+
+// Échanger ne déplace que l'ingrédient choisi : il prend la place d'un ingrédient du même rôle.
+const deux = [{ proteine: [], feculent: ['riz', 'pates'], legume: [], cotes: [] }, { proteine: [], feculent: ['riz'], legume: [], cotes: ['banane'] }];
+const seul = echanger(deux, 0, 1, 'feculent', 'pates');
+assert.deepEqual(seul[0].feculent, ['riz']); // riz est déjà là : il ne revient pas en double
+assert.deepEqual(seul[1].feculent, ['pates']);
+const autre = echanger([{ proteine: [], feculent: ['riz', 'pates'], legume: [], cotes: [] }, { proteine: [], feculent: ['carotte'], legume: [], cotes: [] }], 0, 1, 'feculent', 'pates');
+assert.deepEqual(autre[0].feculent, ['riz', 'carotte']);
+assert.deepEqual(autre[1].feculent, ['pates']);
+const cote = echanger(deux, 1, 0, 'cotes', 'banane'); // un à-côté se déplace seul
+assert.deepEqual([cote[0].cotes, cote[1].cotes], [['banane'], []]);
+assert.deepEqual(echanger(deux, 0, 1, 'feculent', 'riz'), deux); // déjà dans le menu cible : rien ne change
+
+// Un à-côté issu d'une substitution n'apparaît qu'une fois.
+const repris = [{ proteine: ['poulet'], feculent: [], legume: [], cotes: [] }, { proteine: ['poulet'], feculent: [], legume: [], cotes: [] }];
+assert.equal(substituer(repris, new Map([['poulet', 'creme']]), parNom).flatMap((m) => m.cotes).length, 1);
+
+// Hors tirage : un produit sans portion dans une catégorie de menu.
+assert.equal(horsTirage(creme), true);
+assert.equal(horsTirage(poulet), false);
+assert.equal(horsTirage(banane), false); // à-côté d'une catégorie hors menus : tiré normalement
+
+// Relancer chacun : un ingrédient sans remplaçant n'empêche pas les autres d'être remplacés.
+const pv = { V: [ing('b', 'V', 1, 5000, 1)], F: [ing('r', 'F', 1, 95, 1)] };
+const res = relancerChacun(pv, [ing('a', 'V', 1, 100, 1), ing('p', 'F', 1, 90, 1)], [0, 1], 300);
+assert.deepEqual(res.items.map((i) => i.nom), ['a', 'r']);
+assert.deepEqual(res.echecs, [0]);
 
 // Substituer : le poulet remplacé par de la crème (sans portion) passe en à-côté.
 const sub = completer(substituer(avant, new Map([['poulet', 'creme']]), parNom), parNom, 2, 99999);

@@ -3,7 +3,9 @@
 // Un menu = { proteine: [noms], feculent: [noms], legume: [noms], cotes: [noms] }.
 // `portion` = quantité par personne, dans l'unité de l'ingrédient ; sans portion, c'est un à-côté (un paquet).
 
-export const ROLES_MENU = ['proteine', 'feculent', 'legume'];
+import { relancer } from './tirage.js';
+
+export const ROLES_MENU =['proteine', 'feculent', 'legume'];
 const ROLE_CATEGORIE = {
   'Viandes et poissons': 'proteine', 'Œufs et laitages': 'proteine',
   'Féculents': 'feculent', 'Légumineuses': 'feculent',
@@ -86,22 +88,48 @@ export function composer(noms, parNom, nbMenus, personnes, budget, rand = Math.r
   return completer(menus, parNom, personnes, budget, rand);
 }
 
-// Déplace le rôle `roleMenu` du menu a vers le menu b, et celui de b vers a. Les achats ne changent pas.
-export function echanger(menus, a, b, roleMenu) {
+// Déplace `nom` du menu a vers le menu b ; un ingrédient du même rôle de b (absent de a) fait le chemin inverse.
+// Un à-côté se déplace seul. Si b a déjà `nom`, rien ne change.
+export function echanger(menus, a, b, roleMenu, nom) {
   const out = copie(menus);
-  [out[a][roleMenu], out[b][roleMenu]] = [out[b][roleMenu], out[a][roleMenu]];
+  if (a === b || out[b][roleMenu].includes(nom)) return out;
+  out[a][roleMenu] = out[a][roleMenu].filter((n) => n !== nom);
+  if (roleMenu !== 'cotes' && out[b][roleMenu].length) {
+    const retour = out[b][roleMenu].find((n) => !out[a][roleMenu].includes(n));
+    out[b][roleMenu] = out[b][roleMenu].filter((n) => n !== (retour ?? out[b][roleMenu][0]));
+    if (retour) out[a][roleMenu].push(retour);
+  }
+  out[b][roleMenu].push(nom);
   return out;
+}
+
+// Produit sans portion d'une catégorie de menu (crème, beurre…) : il ne sort pas au tirage.
+export const horsTirage = (i) => Boolean(ROLE_CATEGORIE[i.categorie]) && role(i) === 'cote';
+
+// Relance chaque cible à part : celles sans remplaçant dans le budget sont gardées et listées dans `echecs`.
+export function relancerChacun(pool, items, cibles, budget, rand = Math.random) {
+  let courant = items;
+  const echecs = [];
+  for (const i of cibles) {
+    const r = relancer(pool, courant, [i], budget, rand);
+    if (r) courant = r; else echecs.push(i);
+  }
+  return { items: courant, echecs };
 }
 
 // Chaque nouveau nom prend la place de l'ancien, dans la case de son rôle (un ingrédient sans portion passe en à-côté).
 export function substituer(menus, remplacements, parNom) {
+  const cotesVus = new Set();
   return menus.map((m) => {
     const out = { proteine: [], feculent: [], legume: [], cotes: [] };
     for (const r of [...ROLES_MENU, 'cotes']) {
       for (const ancien of m[r]) {
         const n = remplacements.get(ancien) ?? ancien;
-        const case_ = out[role(parNom.get(n)) === 'cote' ? 'cotes' : role(parNom.get(n))];
-        if (!case_.includes(n)) case_.push(n); // pas deux fois le même ingrédient dans un menu
+        const rn = role(parNom.get(n));
+        if (rn === 'cote') {
+          if (!cotesVus.has(n)) out.cotes.push(n); // un à-côté n'est que dans un menu
+          cotesVus.add(n);
+        } else if (!out[rn].includes(n)) out[rn].push(n); // pas deux fois le même ingrédient dans un menu
       }
     }
     return out;
@@ -129,7 +157,8 @@ export function completer(menus, parNom, personnes, budget, rand = Math.random) 
     let retire = false;
     for (let k = out.length - 1; k >= 0 && !retire; k--) {
       for (const r of ROLES_MENU) {
-        const idx = out[k][r].findLastIndex((n) => u.get(n) > 1);
+        let idx = out[k][r].length - 1; // (findLastIndex manque avant iOS 15.4)
+        while (idx >= 0 && !(u.get(out[k][r][idx]) > 1)) idx--;
         if (idx >= 0) { out[k][r].splice(idx, 1); retire = true; break; }
       }
     }

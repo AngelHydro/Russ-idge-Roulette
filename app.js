@@ -1,6 +1,6 @@
-import { budgetMinimum, tirer, relancer } from './tirage.js';
+import { budgetMinimum, tirer } from './tirage.js';
 import {
-  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte,
+  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun,
 } from './menus.js';
 
 const CATEGORIES = [
@@ -60,7 +60,7 @@ function lireCSV(texte) {
 function pool() {
   const masques = new Set(etat.masques);
   const p = Object.fromEntries(CATEGORIES.map((c) => [c, []]));
-  for (const i of base) if (!masques.has(i.nom) && p[i.categorie]) p[i.categorie].push(i);
+  for (const i of base) if (!masques.has(i.nom) && p[i.categorie] && !horsTirage(i)) p[i.categorie].push(i);
   return p;
 }
 
@@ -286,7 +286,8 @@ function surAppui(conteneur, selecteur, { tap, long }) {
     const el = e.target.closest(selecteur);
     if (!el) return;
     const courant = { el, x: e.clientX, y: e.clientY, long: false };
-    if (long) courant.t = setTimeout(() => { courant.long = true; navigator.vibrate?.(15); long(el); }, 500);
+    // `long` renvoie false s'il ne traite pas l'appui : il reste alors un tap.
+    if (long) courant.t = setTimeout(() => { if (long(el) !== false) { courant.long = true; navigator.vibrate?.(15); } }, 500);
     appui = courant;
   });
   conteneur.addEventListener('pointermove', (e) => {
@@ -354,7 +355,11 @@ function basculerOccurrence(el) {
 }
 
 surAppui($('#menus'), '.occ, .menu', {
-  long: (el) => el.classList.contains('occ') && basculerOccurrence(el),
+  // Pendant un déplacement, ou hors d'un ingrédient, un appui long compte comme un tap.
+  long: (el) => {
+    if (deplacement || !el.classList.contains('occ')) return false;
+    basculerOccurrence(el);
+  },
   tap: (el) => {
     const carte = el.closest('.menu');
     if (deplacement && carte) return deplacerVers(Number(carte.dataset.menu));
@@ -366,11 +371,8 @@ function deplacerVers(k) {
   const { menu, role: r, nom } = deplacement;
   deplacement = null;
   if (k !== menu) {
-    if (r === 'cotes') {
-      etat.menus = etat.menus.map((m, i) => ({ ...m, cotes: i === menu ? m.cotes.filter((n) => n !== nom) : i === k ? [...m.cotes, nom] : m.cotes }));
-    } else {
-      etat.menus = echanger(etat.menus, menu, k, r);
-    }
+    etat.menus = echanger(etat.menus, menu, k, r, nom);
+    majListe(); // un ingrédient déjà présent dans le menu cible peut libérer un paquet
     sauver();
   }
   selection.clear();
@@ -397,25 +399,23 @@ $('#actions').addEventListener('click', (e) => {
   const cibles = noms.map((_, i) => i).filter((i) => (action === 'reste') !== nomsChoisis.has(noms[i]));
   if (action === 'masquer') etat.masques.push(...nomsChoisis);
 
-  const nouveaux = cibles.length ? relancer(poolMenus(pool(), etat.personnes), items, cibles, etat.budget) : items;
-  if (nouveaux) {
-    const remplacements = new Map(cibles.map((i) => [noms[i], nouveaux[i].nom]));
-    etat.menus = completer(substituer(etat.menus, remplacements, parNom), parNom, etat.personnes, etat.budget);
-  } else if (action === 'masquer') {
-    const garder = (ns) => ns.filter((n) => !nomsChoisis.has(n));
-    etat.menus = completer(etat.menus.map((m) => ({ proteine: garder(m.proteine), feculent: garder(m.feculent), legume: garder(m.legume), cotes: garder(m.cotes) })),
-      parNom, etat.personnes, etat.budget);
-  }
+  // Chaque cible est relancée à part : une sans remplaçant n'empêche pas les autres.
+  const { items: nouveaux, echecs } = relancerChacun(poolMenus(pool(), etat.personnes), items, cibles, etat.budget);
+  const remplaces = cibles.filter((i) => !echecs.includes(i) && nouveaux[i].nom !== noms[i]);
+  const retires = new Set(action === 'masquer' ? echecs.map((i) => noms[i]) : []); // masqués sans remplaçant : on les enlève
+  const garder = (ns) => ns.filter((n) => !retires.has(n));
+  const menus = substituer(etat.menus, new Map(remplaces.map((i) => [noms[i], nouveaux[i].nom])), parNom)
+    .map((m) => ({ proteine: garder(m.proteine), feculent: garder(m.feculent), legume: garder(m.legume), cotes: garder(m.cotes) }));
+  etat.menus = completer(menus, parNom, etat.personnes, etat.budget);
   // Un article remplacé est un nouvel article : il repart décoché.
-  if (nouveaux) etat.liste = (etat.liste || []).filter((l) => !cibles.some((i) => noms[i] === l.nom && nouveaux[i].nom !== l.nom));
+  etat.liste = (etat.liste || []).filter((l) => !remplaces.some((i) => noms[i] === l.nom));
   majListe();
   selection.clear();
   sauver();
-  if (nouveaux && cibles.length) roulette(400, rendreMenus);
+  if (remplaces.length) roulette(400, rendreMenus);
   else rendreMenus();
-  message(nouveaux ? '' : action === 'masquer'
-    ? 'Masqué, mais aucun remplaçant ne rentre dans le budget'
-    : 'Aucun remplaçant ne rentre dans le budget');
+  const n = echecs.length;
+  message(!n ? '' : `${n} ingrédient${n > 1 ? 's' : ''} sans remplaçant dans le budget${action === 'masquer' ? ' (masqué' + (n > 1 ? 's' : '') + ' quand même)' : ''}`);
 });
 
 $('#voir-liste').addEventListener('click', () => { selection.clear(); deplacement = null; message(''); afficher('liste'); });

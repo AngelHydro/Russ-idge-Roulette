@@ -105,7 +105,6 @@ input[type=range] { width: 100%; accent-color: var(--accent); margin: 4px 0; }
 .article .prix { white-space: nowrap; font-weight: 600; font-variant-numeric: tabular-nums; }
 .article.coche { color: var(--discret); text-decoration: line-through; }
 .article.coche .prix { font-weight: 400; }
-.article.choisi { background: var(--accent-pale); color: var(--accent); border-bottom-color: transparent; }
 .retourne { animation: retourne .35s both; animation-delay: calc(var(--i) * 70ms); }
 @keyframes retourne { from { transform: rotateX(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
 
