@@ -35,8 +35,13 @@ Pois cassés;Légumineuses;Épicerie;1,30;500;g
 Tofu nature;Légumineuses;Frais;3,02;250;g
 Spaghetti;Féculents;Épicerie;1,11;500;g
 Penne;Féculents;Épicerie;0,64;500;g
+Coquillettes;Féculents;Épicerie;1,56;1000;g
+Fusilli;Féculents;Épicerie;0,74;500;g
 Riz basmati;Féculents;Épicerie;1,62;500;g
 Riz long grain;Féculents;Épicerie;2,05;1000;g
+Riz thaï;Féculents;Épicerie;3,56;1000;g
+Riz de Camargue;Féculents;Épicerie;3,80;1000;g
+Riz complet;Féculents;Épicerie;1,76;500;g
 Semoule de couscous;Féculents;Épicerie;1,80;1000;g
 Quinoa;Féculents;Épicerie;4,10;500;g
 Boulgour;Féculents;Épicerie;2,40;450;g
@@ -49,6 +54,10 @@ Courgettes;Légumes;Fruits et légumes;3,99;500;g
 Carottes;Légumes;Fruits et légumes;3,49;1500;g
 Poivrons (x3);Légumes;Fruits et légumes;3,69;500;g
 Tomates cocktail grappe;Légumes;Fruits et légumes;4,49;500;g
+Tomates rondes;Légumes;Fruits et légumes;3,49;1000;g
+Haricots verts frais;Légumes;Fruits et légumes;3,99;400;g
+Chou blanc;Légumes;Fruits et légumes;2,99;1;pièce
+Navets;Légumes;Fruits et légumes;1,90;500;g
 Oignons jaunes;Légumes;Fruits et légumes;1,69;1500;g
 Brocoli;Légumes;Fruits et légumes;3,00;500;g
 Poireaux;Légumes;Fruits et légumes;3,99;1000;g
@@ -60,6 +69,7 @@ Salade en sachet;Légumes;Fruits et légumes;1,15;160;g
 Laitue sucrine (x3);Légumes;Fruits et légumes;1,29;3;pièce
 Concombre;Légumes;Fruits et légumes;2,69;1;pièce
 Pommes golden (x6);Fruits;Fruits et légumes;2,59;6;pièce
+Pommes gala;Fruits;Fruits et légumes;2,29;1000;g
 Bananes (x5);Fruits;Fruits et légumes;2,59;5;pièce
 Clémentines;Fruits;Fruits et légumes;4,99;1500;g
 Oranges;Fruits;Fruits et légumes;4,99;2000;g
@@ -74,6 +84,7 @@ Petits pois surgelés;Surgelés;Surgelés;2,96;600;g
 Brocolis surgelés;Surgelés;Surgelés;2,22;675;g
 Chou-fleur surgelé;Surgelés;Surgelés;1,57;1000;g
 Épinards hachés surgelés;Surgelés;Surgelés;2,05;750;g
+Épinards en branches surgelés;Surgelés;Surgelés;1,56;1000;g
 Poêlée de légumes;Surgelés;Surgelés;3,47;750;g
 Frites;Surgelés;Surgelés;1,39;750;g
 Poisson pané;Surgelés;Surgelés;4,00;400;g
