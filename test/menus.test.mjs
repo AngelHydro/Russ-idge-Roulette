@@ -143,5 +143,12 @@ assert.equal(chercherProduit('huile d’olive', noms2), "Huile d'olive");
 assert.equal(chercherProduit('  AIL ', noms2), 'Ail');
 assert.equal(chercherProduit('lait demi-écrémé', noms2), 'Lait demi-écrémé');
 assert.equal(chercherProduit('truc', noms2), null);
+// Un début de nom suffit s'il ne désigne qu'un produit.
+const noms3 = ['Sel fin', 'Lait entier', 'Lait de soja', 'Lait'];
+assert.equal(chercherProduit('sel', noms3), 'Sel fin');
+assert.equal(chercherProduit('lait e', noms3), 'Lait entier');
+assert.equal(chercherProduit('lait', noms3), 'Lait'); // le nom exact passe avant les débuts de nom
+assert.equal(chercherProduit('lai', noms3), null); // ambigu
+assert.equal(chercherProduit('  ', noms3), null);
 
 console.log('menus : OK');
