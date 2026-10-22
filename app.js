@@ -1,6 +1,6 @@
 import { budgetMinimum, tirer, relancer } from './tirage.js';
 import {
-  ROLES_MENU, role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet,
+  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte,
 } from './menus.js';
 
 const CATEGORIES = [
@@ -338,19 +338,8 @@ function rendreMenus(anim = false) {
     </div>`;
   }).join('');
 
-  // Alerte : quels rôles manquent, et pourquoi (rien de tiré, ou budget trop juste pour une reprise).
-  const n = incomplets(menus);
-  const a = $('#alerte-menus');
-  a.hidden = !n;
-  if (n) {
-    const presents = new Set(menus.flatMap((m) => ROLES_MENU.flatMap((r) => m[r].map((nom) => role(parNom.get(nom))))));
-    const manquants = ROLES_MENU.filter((r) => menus.some((m) => !m[r].length));
-    const jamaisTires = manquants.filter((r) => !presents.has(r));
-    a.textContent = `${n} menu${n > 1 ? 's' : ''} sur ${menus.length} incomplet${n > 1 ? 's' : ''} : `
-      + (jamaisTires.length
-        ? `aucun ${jamaisTires.map((r) => ({ proteine: 'protéine', feculent: 'féculent ni légumineuse', legume: 'légume' })[r]).join(', ')} tiré.`
-        : 'le budget ne couvre pas une portion de plus.');
-  }
+  $('#alerte-menus').textContent = alerte(menus, parNom);
+  $('#alerte-menus').hidden = !incomplets(menus);
 
   $('#total-menus').textContent = `${euros(total(achats(menus, parNom, etat.personnes), parNom))} / ${euros(etat.budget)}`;
   $('#actions').hidden = selection.size === 0 || !!deplacement;
@@ -517,5 +506,6 @@ try {
   base = [];
 }
 parNom = new Map(base.map((i) => [i.nom, i]));
+if (etat.menus && base.length) etat.menus = nettoyer(etat.menus, parNom);
 afficher(articles().length ? 'liste' : 'tirage');
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

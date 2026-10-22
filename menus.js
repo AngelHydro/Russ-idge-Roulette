@@ -50,6 +50,23 @@ export function total(achatsMap, parNom) {
 
 export const incomplets = (menus) => menus.filter((m) => ROLES_MENU.some((r) => !m[r].length)).length;
 
+// Oublie les noms absents de la base (ligne retirée du CSV depuis la sauvegarde).
+export const nettoyer = (menus, parNom) => menus.map((m) =>
+  Object.fromEntries(Object.entries(m).map(([r, noms]) => [r, noms.filter((n) => parNom.has(n))])));
+
+const MANQUE = { proteine: 'aucune protéine tirée', feculent: 'aucun féculent ni légumineuse tiré', legume: 'aucun légume tiré' };
+
+// Texte d'alerte des menus incomplets ('' si tous sont complets) : rôle jamais tiré, sinon budget trop juste.
+export function alerte(menus, parNom) {
+  const n = incomplets(menus);
+  if (!n) return '';
+  const tires = new Set(menus.flatMap((m) => ROLES_MENU.flatMap((r) => m[r].map((nom) => role(parNom.get(nom))))));
+  const jamais = ROLES_MENU.filter((r) => !tires.has(r) && menus.some((m) => !m[r].length));
+  const s = n > 1 ? 's' : '';
+  return `${n} menu${s} sur ${menus.length} incomplet${s} : `
+    + (jamais.length ? `${jamais.map((r) => MANQUE[r]).join(', ')}.` : 'le budget ne couvre pas une portion de plus.');
+}
+
 const copie = (menus) => menus.map((m) => ({ proteine: [...m.proteine], feculent: [...m.feculent], legume: [...m.legume], cotes: [...m.cotes] }));
 const auHasard = (xs, rand) => xs[Math.floor(rand() * xs.length)];
 

@@ -1,7 +1,7 @@
 // Lancer : node test/menus.test.mjs
 import assert from 'node:assert/strict';
 import { tirer, budgetMinimum } from '../tirage.js';
-import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet } from '../menus.js';
+import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte } from '../menus.js';
 
 const ing = (nom, categorie, quantite, prix, portion, unite = 'g') => ({ nom, categorie, quantite, prix, portion, unite });
 const poulet = ing('poulet', 'Viandes et poissons', 300, 400, 120);
@@ -93,5 +93,17 @@ assert.ok(bc >= budgetMinimum(poolMenus(poolSimple, 2), countsSimple));
 assert.equal(bc, 3 * 400 + 160 + 350); // poulet 3 × 240 g = 3 paquets ; riz 480 g et carotte 1,2 kg tiennent en 1 paquet
 assert.equal(incomplets(composer(['poulet', 'riz', 'carotte'], parNom, 3, 2, bc)), 0);
 assert.equal(budgetComplet(poolSimple, { 'Féculents': 1, 'Légumes': 1 }, 2, 1), Infinity); // pas de protéine
+
+// Menus sauvegardés avec un nom disparu du CSV : on l'oublie au lieu de planter.
+const propres = nettoyer([{ proteine: ['poulet', 'disparu'], feculent: [], legume: ['disparu'], cotes: ['disparu', 'banane'] }], parNom);
+assert.deepEqual(propres, [{ proteine: ['poulet'], feculent: [], legume: [], cotes: ['banane'] }]);
+
+// Alerte des menus incomplets, accordée en français.
+const sansProteine = [{ proteine: [], feculent: ['riz'], legume: ['carotte'], cotes: [] }, { proteine: [], feculent: ['riz'], legume: [], cotes: [] }];
+assert.equal(alerte(sansProteine, parNom), '2 menus sur 2 incomplets : aucune protéine tirée.');
+assert.equal(alerte([{ proteine: ['poulet'], feculent: [], legume: [], cotes: [] }], parNom),
+  '1 menu sur 1 incomplet : aucun féculent ni légumineuse tiré, aucun légume tiré.');
+assert.equal(alerte(serres, parNom), '1 menu sur 2 incomplet : le budget ne couvre pas une portion de plus.');
+assert.equal(alerte(complets, parNom), '');
 
 console.log('menus : OK');
