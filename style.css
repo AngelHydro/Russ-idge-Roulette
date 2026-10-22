@@ -122,6 +122,25 @@ footer {
 
 #retour-menus { color: var(--discret); }
 
+/* Articles à racheter (Tirage et Liste) */
+form.ajout { display: flex; gap: 6px; margin: 4px 0 0; }
+form.carte.ajout { padding: 8px; }
+form.ajout input {
+  flex: 1; min-width: 0; font: inherit; color: inherit; background: var(--pastille);
+  border: none; border-radius: 999px; padding: 10px 14px; outline: none;
+}
+form.ajout input:focus { box-shadow: 0 0 0 2px var(--accent); }
+form.ajout button { color: var(--accent); background: var(--pastille); padding: 10px 14px; }
+.ajouts { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ajouts:empty { display: none; }
+.ajouts li { display: flex; align-items: center; gap: 2px; background: var(--pastille); border-radius: 999px; padding: 2px 2px 2px 12px; font-size: 14px; }
+.ajouts button, .article .retirer { background: none; padding: 4px 8px; color: var(--discret); font-size: 13px; }
+#racheter .message { margin-top: 6px; }
+#depassement { display: flex; flex-direction: column; gap: 6px; background: var(--accent-pale); color: var(--accent); border-radius: 14px; padding: 8px 12px; font-size: 14px; }
+#depassement[hidden] { display: none; }
+#rentrer { background: var(--accent); color: var(--sur-accent); padding: 9px; font-weight: 600; }
+.article .prix { cursor: pointer; }
+
 /* Écran Menus */
 #menus { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 .menu h2 { margin: 0 0 4px; font-size: 15px; }

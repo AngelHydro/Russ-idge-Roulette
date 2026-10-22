@@ -1,6 +1,6 @@
-import { budgetMinimum, tirer } from './tirage.js';
+import { budgetMinimum, tirerVarie } from './tirage.js';
 import {
-  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun,
+  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts,
 } from './menus.js';
 
 const CATEGORIES = [
@@ -19,6 +19,9 @@ const etat = Object.assign(
     personnes: 1,
     menus: null, // [{ proteine, feculent, legume, cotes }] (voir menus.js)
     liste: null, // [{ nom, coche }]
+    ajouts: [], // noms à racheter à la main, un paquet chacun, réservés dans le budget
+    historique: [], // noms tirés aux 3 derniers tirages, le plus récent en dernier
+    variete: 2, // nombre de derniers tirages dont on évite les ingrédients (0 à 3)
     masques: [],
     prix: 'paquet',
     son: false,
@@ -60,9 +63,16 @@ function lireCSV(texte) {
 function pool() {
   const masques = new Set(etat.masques);
   const p = Object.fromEntries(CATEGORIES.map((c) => [c, []]));
-  for (const i of base) if (!masques.has(i.nom) && p[i.categorie] && !horsTirage(i)) p[i.categorie].push(i);
+  const ajouts = new Set(etat.ajouts);
+  for (const i of base) if (!masques.has(i.nom) && !ajouts.has(i.nom) && p[i.categorie] && !horsTirage(i)) p[i.categorie].push(i);
   return p;
 }
+
+// Budget : les articles à racheter sont réservés d'avance, la roulette tire avec le reste.
+const achatsMenus = () => (etat.menus ? achats(etat.menus, parNom, etat.personnes) : new Map());
+const reserveAjouts = () => coutAjouts(etat.ajouts, parNom, new Map());
+const budgetTirage = () => etat.budget - reserveAjouts();
+const totalCourses = () => { const a = achatsMenus(); return total(a, parNom) + coutAjouts(etat.ajouts, parNom, a); };
 
 // Réglages plafonnés au nombre d'ingrédients disponibles.
 function countsEffectifs(p) {
@@ -121,15 +131,50 @@ function rendreTirage() {
   ajusterChamp();
   $('#budget-curseur').value = Math.round(etat.budget / 100);
 
-  const min = budgetMinimum(poolMenus(p, etat.personnes), counts);
-  const complet = budgetComplet(p, counts, etat.nbMenus, etat.personnes);
+  $('#racheter .ajouts').innerHTML = etat.ajouts.map((n) =>
+    `<li><span>${esc(n)}</span><button data-retirer="${esc(n)}" aria-label="Retirer ${esc(n)}">✕</button></li>`).join('');
+
+  const reserve = reserveAjouts();
+  const min = budgetMinimum(poolMenus(p, etat.personnes), counts) + reserve;
+  const complet = budgetComplet(p, counts, etat.nbMenus, etat.personnes) + reserve;
   const vide = somme(Object.values(counts)) === 0;
   const m = $('#minimum');
   m.textContent = !base.length ? 'Ingrédients introuvables (ingredients.csv)'
+    : reserve > etat.budget ? `Les ajouts dépassent le budget (${euros(reserve)})`
     : vide ? 'Choisis au moins un ingrédient'
     : `Minimum : ${euros(min)}` + (complet > min && complet < Infinity ? ` · ${etat.nbMenus} menus complets à partir de ${euros(complet)}` : '');
   m.classList.toggle('alerte', !base.length || vide || min > etat.budget);
 }
+
+// ---------- Articles à racheter (Tirage et Liste) ----------
+
+function ajouter(nom) {
+  nom = nom.trim();
+  if (!nom) return;
+  if (!parNom.has(nom)) return message('Produit inconnu');
+  message('');
+  if (!etat.ajouts.includes(nom)) etat.ajouts.push(nom);
+  if (etat.liste) majListe();
+  sauver();
+  afficher(ecranCourant);
+}
+
+function retirer(nom) {
+  etat.ajouts = etat.ajouts.filter((n) => n !== nom);
+  if (etat.liste) majListe();
+  sauver();
+  afficher(ecranCourant);
+}
+
+document.querySelectorAll('form.ajout').forEach((f) => f.addEventListener('submit', (e) => {
+  e.preventDefault();
+  ajouter(f.elements.ajout.value);
+  f.elements.ajout.value = '';
+}));
+$('#racheter .ajouts').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-retirer]');
+  if (b) retirer(b.dataset.retirer);
+});
 
 $('#reglages-menus').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-reglage]');
@@ -171,27 +216,38 @@ $('#budget-valeur').addEventListener('change', (e) => {
   rendreTirage();
 });
 
-$('#lancer').addEventListener('click', () => {
+// Tirage complet avec les réglages en cours. `remplace` : on refait le dernier tirage (il ne compte pas en plus dans
+// l'historique). Renvoie false si le budget ne suffit pas.
+function lancerTirage({ remplace = false } = {}) {
   const p = pool();
   const counts = countsEffectifs(p);
   const pm = poolMenus(p, etat.personnes);
-  const items = tirer(pm, counts, etat.budget);
+  const reste = budgetTirage();
+  const historique = remplace ? etat.historique.slice(0, -1) : etat.historique;
+  const recents = new Set(etat.variete ? historique.slice(-etat.variete).flat() : []);
+  const items = reste < 0 ? null : tirerVarie(pm, counts, reste, recents);
   if (!items || !items.length) {
-    rendreTirage();
-    if (!items) $('#minimum').textContent = `Budget insuffisant : il faut au moins ${euros(budgetMinimum(pm, counts))}`;
-    return;
+    if (ecranCourant === 'tirage') rendreTirage();
+    if (!items) message(`Budget insuffisant : il faut au moins ${euros(budgetMinimum(pm, counts) + reserveAjouts())}`);
+    return false;
   }
-  etat.menus = composer(items.map((i) => i.nom), parNom, etat.nbMenus, etat.personnes, etat.budget);
+  const noms = items.map((i) => i.nom);
+  etat.menus = composer(noms, parNom, etat.nbMenus, etat.personnes, reste);
+  etat.historique = [...historique, noms].slice(-3);
   majListe();
   selection.clear();
   sauver();
+  message('');
   roulette(1500, () => { afficher('menus'); rendreMenus(true); });
-});
+  return true;
+}
+$('#lancer').addEventListener('click', () => lancerTirage());
 
-// La liste de courses suit les menus : un article par ingrédient acheté, en gardant les coches.
+// La liste de courses suit les menus et les ajouts : un article par produit acheté, en gardant les coches.
 function majListe() {
   const coches = new Set((etat.liste || []).filter((l) => l.coche).map((l) => l.nom));
-  etat.liste = [...achats(etat.menus, parNom, etat.personnes).keys()].map((nom) => ({ nom, coche: coches.has(nom) }));
+  const noms = new Set([...achatsMenus().keys(), ...etat.ajouts.filter((n) => parNom.has(n))]);
+  etat.liste = [...noms].map((nom) => ({ nom, coche: coches.has(nom) }));
 }
 
 // ---------- Animation ----------
@@ -243,8 +299,8 @@ const rang = (r) => (RAYONS.includes(r) ? RAYONS.indexOf(r) : RAYONS.length);
 
 // Nombre de paquets par article (1 pour une liste faite avant les menus).
 function nbPaquets() {
-  const a = etat.menus ? achats(etat.menus, parNom, etat.personnes) : new Map();
-  return (nom) => a.get(nom) || 1;
+  const a = achatsMenus();
+  return Object.assign((nom) => a.get(nom) || 1, { menus: a });
 }
 const qteArticle = (i, p) => (p > 1 ? `${p} × ${quantite(i)}` : quantite(i));
 const prixArticles = (lignes, pq) => somme(lignes.map((l) => pq(l.nom) * parNom.get(l.nom).prix));
@@ -263,16 +319,29 @@ function rendreListe(anim = false) {
     `<div class="carte"><p class="surtitre">${esc(r)}</p>` + groupes.get(r).sort((a, b) => a.coche - b.coche).map((l) => {
       const i = parNom.get(l.nom);
       const classes = ['article', l.coche && 'coche', anim && 'retourne'].filter(Boolean).join(' ');
+      const retirer = etat.ajouts.includes(l.nom) && !pq.menus.has(l.nom)
+        ? ` <button class="retirer" data-retirer="${esc(l.nom)}" aria-label="Retirer ${esc(l.nom)}">✕</button>` : '';
       return `<div class="${classes}" data-nom="${esc(l.nom)}" style="--i:${n++}">
-        <span>${esc(i.nom)} <span class="poids">· ${qteArticle(i, pq(l.nom))}</span></span>
+        <span>${esc(i.nom)} <span class="poids">· ${qteArticle(i, pq(l.nom))}</span>${retirer}</span>
         <span class="prix">${etat.prix === 'kilo' ? prixAffiche(i) : euros(pq(l.nom) * i.prix)}</span></div>`;
     }).join('') + '</div>',
   ).join('');
 
-  $('#total').textContent = `${euros(prixArticles(lignes, pq))} / ${euros(etat.budget)}`;
+  const totalListe = prixArticles(lignes, pq);
+  $('#total').textContent = `${euros(totalListe)} / ${euros(etat.budget)}`;
   $('#reste').textContent = `Reste ${euros(prixArticles(lignes.filter((l) => !l.coche), pq))}`;
   $('#retour-menus').hidden = !etat.menus;
+  // Un ajout fait après le tirage peut dépasser le budget : on le dit, et on propose de refaire le tirage.
+  const depasse = totalListe - etat.budget;
+  $('#depassement').hidden = depasse <= 0;
+  $('#depassement span').textContent = `${euros(depasse)} au-dessus du budget`;
+  $('#rentrer').hidden = !etat.menus;
 }
+
+$('#rentrer').addEventListener('click', () => {
+  if (reserveAjouts() > etat.budget) return message('Les ajouts dépassent le budget à eux seuls');
+  lancerTirage({ remplace: true });
+});
 
 function message(texte) {
   for (const m of document.querySelectorAll('.message')) { m.textContent = texte; m.hidden = !texte; }
@@ -285,7 +354,7 @@ function surAppui(conteneur, selecteur, { tap, long }) {
   conteneur.addEventListener('pointerdown', (e) => {
     const el = e.target.closest(selecteur);
     if (!el) return;
-    const courant = { el, x: e.clientX, y: e.clientY, long: false };
+    const courant = { el, cible: e.target, x: e.clientX, y: e.clientY, long: false };
     // `long` renvoie false s'il ne traite pas l'appui : il reste alors un tap.
     if (long) courant.t = setTimeout(() => { if (long(el) !== false) { courant.long = true; navigator.vibrate?.(15); } }, 500);
     appui = courant;
@@ -296,16 +365,23 @@ function surAppui(conteneur, selecteur, { tap, long }) {
   conteneur.addEventListener('pointercancel', annuler);
   conteneur.addEventListener('pointerup', () => {
     if (!appui) return;
-    const { el, long: fait } = appui;
+    const { el, cible, long: fait } = appui;
     annuler();
-    if (!fait) tap(el);
+    if (!fait) tap(el, cible);
   });
   conteneur.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
-// Liste : un tap coche ou décoche.
+// Liste : un tap coche ou décoche ; sur le prix, il bascule paquet / kilo ; sur ✕, il retire l'ajout.
 surAppui($('#liste'), '.article', {
-  tap: (el) => {
+  tap: (el, cible) => {
+    const r = cible.closest('[data-retirer]');
+    if (r) return retirer(r.dataset.retirer);
+    if (cible.closest('.prix')) {
+      etat.prix = etat.prix === 'kilo' ? 'paquet' : 'kilo';
+      sauver();
+      return rendreListe();
+    }
     const l = etat.liste.find((x) => x.nom === el.dataset.nom);
     l.coche = !l.coche;
     sauver();
@@ -342,7 +418,7 @@ function rendreMenus(anim = false) {
   $('#alerte-menus').textContent = alerte(menus, parNom);
   $('#alerte-menus').hidden = !incomplets(menus);
 
-  $('#total-menus').textContent = `${euros(total(achats(menus, parNom, etat.personnes), parNom))} / ${euros(etat.budget)}`;
+  $('#total-menus').textContent = `${euros(totalCourses())} / ${euros(etat.budget)}`;
   $('#actions').hidden = selection.size === 0 || !!deplacement;
 }
 
@@ -400,13 +476,13 @@ $('#actions').addEventListener('click', (e) => {
   if (action === 'masquer') etat.masques.push(...nomsChoisis);
 
   // Chaque cible est relancée à part : une sans remplaçant n'empêche pas les autres.
-  const { items: nouveaux, echecs } = relancerChacun(poolMenus(pool(), etat.personnes), items, cibles, etat.budget);
+  const { items: nouveaux, echecs } = relancerChacun(poolMenus(pool(), etat.personnes), items, cibles, budgetTirage());
   const remplaces = cibles.filter((i) => !echecs.includes(i) && nouveaux[i].nom !== noms[i]);
   const retires = new Set(action === 'masquer' ? echecs.map((i) => noms[i]) : []); // masqués sans remplaçant : on les enlève
   const garder = (ns) => ns.filter((n) => !retires.has(n));
   const menus = substituer(etat.menus, new Map(remplaces.map((i) => [noms[i], nouveaux[i].nom])), parNom)
     .map((m) => ({ proteine: garder(m.proteine), feculent: garder(m.feculent), legume: garder(m.legume), cotes: garder(m.cotes) }));
-  etat.menus = completer(menus, parNom, etat.personnes, etat.budget);
+  etat.menus = completer(menus, parNom, etat.personnes, budgetTirage());
   // Un article remplacé est un nouvel article : il repart décoché.
   etat.liste = (etat.liste || []).filter((l) => !remplaces.some((i) => noms[i] === l.nom));
   majListe();
@@ -438,6 +514,7 @@ $('#nouveau').addEventListener('click', (e) => {
   desarmerNouveau(); // sinon le tirage suivant pourrait être effacé d'un seul tap
   etat.liste = null;
   etat.menus = null;
+  etat.ajouts = [];
   selection.clear();
   sauver();
   message('');
@@ -471,6 +548,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appliquerT
 function rendreParametres() {
   document.querySelector(`input[name=theme][value=${etat.theme}]`).checked = true;
   document.querySelector(`input[name=prix][value=${etat.prix}]`).checked = true;
+  document.querySelector(`input[name=variete][value="${etat.variete}"]`).checked = true;
   $('#son').checked = etat.son;
   $('#masques').innerHTML = etat.masques.length
     ? etat.masques.map((n) => `<li><span>${esc(n)}</span><button data-nom="${esc(n)}">Démasquer</button></li>`).join('')
@@ -479,6 +557,8 @@ function rendreParametres() {
 
 document.querySelectorAll('input[name=prix]').forEach((r) =>
   r.addEventListener('change', () => { etat.prix = r.value; sauver(); }));
+document.querySelectorAll('input[name=variete]').forEach((r) =>
+  r.addEventListener('change', () => { etat.variete = Number(r.value); sauver(); }));
 document.querySelectorAll('input[name=theme]').forEach((r) =>
   r.addEventListener('change', () => { etat.theme = r.value; sauver(); appliquerTheme(); }));
 $('#son').addEventListener('change', (e) => {
@@ -507,5 +587,8 @@ try {
 }
 parNom = new Map(base.map((i) => [i.nom, i]));
 if (etat.menus && base.length) etat.menus = nettoyer(etat.menus, parNom);
+// Suggestions pendant la saisie d'un article à racheter : tous les produits du fichier.
+$('#suggestions').innerHTML = base.map((i) => i.nom).sort((a, b) => a.localeCompare(b, 'fr'))
+  .map((n) => `<option value="${esc(n)}"></option>`).join('');
 afficher(articles().length ? 'liste' : 'tirage');
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

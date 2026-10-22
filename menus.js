@@ -50,7 +50,11 @@ export function total(achatsMap, parNom) {
   return t;
 }
 
-export const incomplets = (menus) => menus.filter((m) => ROLES_MENU.some((r) => !m[r].length)).length;
+// Articles à racheter : un paquet chacun, sauf ceux déjà achetés pour les menus ; les noms inconnus sont ignorés.
+export const coutAjouts = (ajouts, parNom, achatsMap) =>
+  ajouts.filter((n) => parNom.has(n) && !achatsMap.has(n)).reduce((t, n) => t + parNom.get(n).prix, 0);
+
+export const incomplets =(menus) => menus.filter((m) => ROLES_MENU.some((r) => !m[r].length)).length;
 
 // Oublie les noms absents de la base (ligne retirée du CSV depuis la sauvegarde).
 export const nettoyer = (menus, parNom) => menus.map((m) =>

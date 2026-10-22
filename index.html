@@ -21,6 +21,12 @@
     </header>
     <ul id="reglages-menus" class="carte lignes"></ul>
     <ul id="categories" class="carte lignes"></ul>
+    <div id="racheter" class="carte">
+      <p class="surtitre">À racheter</p>
+      <form class="ajout"><input name="ajout" list="suggestions" placeholder="Lait, huile…" autocomplete="off" aria-label="Article à racheter"><button>Ajouter</button></form>
+      <ul class="ajouts"></ul>
+      <p class="message discret" hidden></p>
+    </div>
     <div class="carte budget">
       <label for="budget-valeur" class="surtitre">Budget</label>
       <div class="montant"><input id="budget-valeur" type="text" inputmode="decimal" autocomplete="off"><span>€</span></div>
@@ -66,9 +72,11 @@
         <button class="icone" data-ecran="parametres" aria-label="Paramètres">⚙</button>
       </span>
     </header>
+    <form class="ajout carte"><input name="ajout" list="suggestions" placeholder="Ajouter un article…" autocomplete="off" aria-label="Article à ajouter"><button>Ajouter</button></form>
     <div id="liste"></div>
     <footer>
       <p class="message discret" hidden></p>
+      <div id="depassement" hidden><span></span><button id="rentrer">Relancer pour rentrer dans le budget</button></div>
       <div class="carte totaux">
         <div><p class="surtitre">Total</p><span id="total"></span></div>
         <div class="droite"><p class="surtitre">Reste à acheter</p><span id="reste"></span></div>
@@ -101,6 +109,15 @@
       </div>
     </div>
     <div class="carte">
+      <p class="surtitre">Variété : éviter les ingrédients des derniers tirages</p>
+      <div class="segment">
+        <label><input type="radio" name="variete" value="0"> Non</label>
+        <label><input type="radio" name="variete" value="1"> 1</label>
+        <label><input type="radio" name="variete" value="2"> 2</label>
+        <label><input type="radio" name="variete" value="3"> 3</label>
+      </div>
+    </div>
+    <div class="carte">
       <label class="ligne"><span>Son du clic</span><input type="checkbox" id="son" role="switch"></label>
     </div>
     <div class="carte">
@@ -118,6 +135,7 @@
     </svg>
   </div>
 
+  <datalist id="suggestions"></datalist>
   <script type="module" src="app.js"></script>
 </body>
 </html>
