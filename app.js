@@ -47,7 +47,7 @@ function lireCSV(texte) {
   return lignes.filter((l) => l.trim()).map((l) => {
     const o = Object.fromEntries(l.split(';').map((v, i) => [cols[i], v.trim()]));
     const num = (v) => parseFloat(String(v).replace(',', '.'));
-    return { ...o, prix: Math.round(num(o.prix) * 100), quantite: num(o.quantite) };
+    return { ...o, prix: Math.round(num(o.prix) * 100), quantite: num(o.quantite), portion: num(o.portion) };
   }).filter((i) => i.nom && i.prix >= 0 && i.quantite > 0);
 }
 

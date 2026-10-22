@@ -23,8 +23,8 @@ L'app doit être servie en HTTPS. Le plus simple est GitHub Pages :
 Une ligne par produit, au format Excel français (séparateur `;`, virgule décimale) :
 
 ```
-nom;categorie;rayon;prix;quantite;unite
-Lentilles vertes;Légumineuses;Épicerie;1,35;500;g
+nom;categorie;rayon;prix;quantite;unite;portion
+Lentilles vertes;Légumineuses;Épicerie;1,35;500;g;60
 ```
 
 - `categorie` : une des 10 catégories de l'app (Viandes et poissons, Œufs et laitages, Légumineuses, Féculents, Légumes, Fruits, Surgelés, Desserts, Boulangerie, Boissons). Un produit surgelé va toujours dans Surgelés.
