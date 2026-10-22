@@ -29,7 +29,7 @@ Lentilles vertes;Légumineuses;Épicerie;1,35;500;g
 
 - `categorie` : une des 10 catégories de l'app (Viandes et poissons, Œufs et laitages, Légumineuses, Féculents, Légumes, Fruits, Surgelés, Desserts, Boulangerie, Boissons). Un produit surgelé va toujours dans Surgelés.
 - `prix` : prix du paquet en euros. `quantite` + `unite` (`g`, `ml` ou `pièce`) : contenu du paquet, qui sert au prix au kilo.
-- Les prix actuels sont des **estimations** proches des prix Intermarché, sans magasin précis. Ils sont mis à jour chaque trimestre.
+- Les prix viennent du site Intermarché (octobre 2026), sans magasin précis : ce sont des repères, pas les prix exacts de ton magasin. Ils sont mis à jour chaque trimestre.
 
 ## Développement
 

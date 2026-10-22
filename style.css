@@ -84,9 +84,8 @@ button.principal {
 }
 .montant input {
   font: inherit; color: inherit; background: none; border: none; padding: 0; margin: 0;
-  text-align: right; outline: none; -moz-appearance: textfield; appearance: textfield;
+  text-align: right; outline: none;
 }
-.montant input::-webkit-inner-spin-button, .montant input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .montant:focus-within { box-shadow: 0 0 0 2px var(--accent); }
 .montant span { font-size: 20px; color: var(--discret); font-weight: 500; }
 input[type=range] { width: 100%; accent-color: var(--accent); margin: 4px 0; }

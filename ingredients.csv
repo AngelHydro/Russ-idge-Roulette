@@ -1,6 +1,8 @@
 ﻿nom;categorie;rayon;prix;quantite;unite
 Filets de poulet (x2);Viandes et poissons;Boucherie;3,93;300;g
 Steaks hachés 5 % (x2);Viandes et poissons;Boucherie;4,95;250;g
+Cuisses de poulet (x2);Viandes et poissons;Boucherie;3,80;450;g
+Merguez (x6);Viandes et poissons;Boucherie;2,73;300;g
 Côtes de porc;Viandes et poissons;Boucherie;5,62;300;g
 Saucisses de Toulouse (x8);Viandes et poissons;Boucherie;8,10;1000;g
 Escalopes de dinde (x2);Viandes et poissons;Boucherie;3,66;240;g
@@ -24,7 +26,7 @@ Crème fraîche épaisse;Œufs et laitages;Frais;1,77;445;g
 Beurre doux;Œufs et laitages;Frais;2,62;250;g
 Lentilles vertes;Légumineuses;Épicerie;2,02;500;g
 Lentilles corail;Légumineuses;Épicerie;3,81;450;g
-Lentilles beluga;Légumineuses;Épicerie;2,29;500;g
+Lentilles préparées;Légumineuses;Épicerie;1,32;530;g
 Pois chiches;Légumineuses;Épicerie;0,75;265;g
 Haricots rouges;Légumineuses;Épicerie;0,84;250;g
 Haricots blancs;Légumineuses;Épicerie;1,02;250;g
@@ -42,19 +44,19 @@ Nouilles aux œufs;Féculents;Épicerie;1,50;250;g
 Polenta;Féculents;Épicerie;1,85;500;g
 Gnocchis;Féculents;Frais;2,49;520;g
 Pommes de terre;Féculents;Fruits et légumes;4,99;2500;g
-Patates douces;Féculents;Fruits et légumes;2,99;1000;g
+Patates douces;Féculents;Fruits et légumes;2,79;1000;g
 Courgettes;Légumes;Fruits et légumes;3,99;500;g
 Carottes;Légumes;Fruits et légumes;3,49;1500;g
 Poivrons (x3);Légumes;Fruits et légumes;3,69;500;g
-Tomates;Légumes;Fruits et légumes;2,99;1000;g
+Tomates cocktail grappe;Légumes;Fruits et légumes;4,49;500;g
 Oignons jaunes;Légumes;Fruits et légumes;1,69;1500;g
-Brocoli;Légumes;Fruits et légumes;1,79;500;g
-Poireaux;Légumes;Fruits et légumes;2,29;1000;g
+Brocoli;Légumes;Fruits et légumes;3,00;500;g
+Poireaux;Légumes;Fruits et légumes;3,99;1000;g
 Champignons de Paris;Légumes;Fruits et légumes;3,69;400;g
 Aubergines (x2);Légumes;Fruits et légumes;3,79;2;pièce
 Endives;Légumes;Fruits et légumes;1,99;650;g
-Épinards frais;Légumes;Fruits et légumes;1,99;300;g
-Chou-fleur;Légumes;Fruits et légumes;2,49;1;pièce
+Betteraves cuites;Légumes;Fruits et légumes;1,43;300;g
+Salade en sachet;Légumes;Fruits et légumes;1,15;160;g
 Laitue sucrine (x3);Légumes;Fruits et légumes;1,29;3;pièce
 Concombre;Légumes;Fruits et légumes;2,69;1;pièce
 Pommes golden (x6);Fruits;Fruits et légumes;2,59;6;pièce
@@ -65,17 +67,18 @@ Poires;Fruits;Fruits et légumes;1,99;1000;g
 Raisin;Fruits;Fruits et légumes;4,99;500;g
 Citrons;Fruits;Fruits et légumes;2,69;1000;g
 Kiwis (x4);Fruits;Fruits et légumes;3,99;4;pièce
-Ananas;Fruits;Fruits et légumes;1,99;1;pièce
+Melon;Fruits;Fruits et légumes;2,49;1;pièce
 Mangue;Fruits;Fruits et légumes;2,49;1;pièce
-Haricots verts surgelés;Surgelés;Surgelés;1,99;1000;g
+Haricots verts extra-fins surgelés;Surgelés;Surgelés;1,85;1000;g
 Petits pois surgelés;Surgelés;Surgelés;2,96;600;g
 Brocolis surgelés;Surgelés;Surgelés;2,22;675;g
+Chou-fleur surgelé;Surgelés;Surgelés;1,57;1000;g
 Épinards hachés surgelés;Surgelés;Surgelés;2,05;750;g
 Poêlée de légumes;Surgelés;Surgelés;3,47;750;g
 Frites;Surgelés;Surgelés;1,39;750;g
 Poisson pané;Surgelés;Surgelés;4,00;400;g
 Nuggets de poulet;Surgelés;Surgelés;2,61;200;g
-Pizza margherita;Surgelés;Surgelés;2,49;400;g
+Pizza margherita;Surgelés;Surgelés;3,59;295;g
 Lasagnes bolognaises;Surgelés;Surgelés;4,43;1000;g
 Glace vanille;Surgelés;Surgelés;1,60;478;g
 Compotes de pomme (x12);Desserts;Épicerie;5,98;1080;g

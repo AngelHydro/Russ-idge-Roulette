@@ -102,7 +102,7 @@ function rendreTirage() {
         <button data-cat="${esc(c)}" data-delta="1" aria-label="Plus : ${esc(c)}">+</button>
       </span></li>`).join('');
   const champ = $('#budget-valeur');
-  if (document.activeElement !== champ) champ.value = etat.budget / 100;
+  if (document.activeElement !== champ) champ.value = String(etat.budget / 100).replace('.', ',');
   ajusterChamp();
   $('#budget-curseur').value = Math.round(etat.budget / 100);
 
@@ -300,15 +300,21 @@ $('#actions').addEventListener('click', (e) => {
 });
 
 // Confirmation dans l'app (certains navigateurs intégrés bloquent confirm()) : 1er tap arme, 2e tap valide.
+let armeNouveau = null;
+function desarmerNouveau() {
+  clearTimeout(armeNouveau);
+  armeNouveau = null;
+  $('#nouveau').textContent = 'Nouveau tirage';
+  $('#nouveau').classList.remove('alerte');
+}
 $('#nouveau').addEventListener('click', (e) => {
-  const b = e.currentTarget;
-  if (!b.dataset.arme) {
-    b.dataset.arme = '1';
-    b.textContent = 'Remplacer la liste ? Toucher pour confirmer';
-    b.classList.add('alerte');
-    setTimeout(() => { delete b.dataset.arme; b.textContent = 'Nouveau tirage'; b.classList.remove('alerte'); }, 3000);
+  if (!armeNouveau) {
+    e.currentTarget.textContent = 'Remplacer la liste ? Toucher pour confirmer';
+    e.currentTarget.classList.add('alerte');
+    armeNouveau = setTimeout(desarmerNouveau, 3000);
     return;
   }
+  desarmerNouveau(); // sinon le tirage suivant pourrait être effacé d'un seul tap
   etat.liste = null;
   selection.clear();
   sauver();
@@ -370,12 +376,12 @@ $('#retour').addEventListener('click', () => afficher(ecranPrecedent));
 
 // ---------- Démarrage ----------
 
+appliquerTheme();
 try {
   base = lireCSV(await (await fetch('ingredients.csv')).text());
 } catch {
   base = [];
 }
 parNom = new Map(base.map((i) => [i.nom, i]));
-appliquerTheme();
 afficher(articles().length ? 'liste' : 'tirage');
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
