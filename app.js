@@ -101,9 +101,11 @@ function afficher(nom) {
   if (nom !== ecranCourant && nom === 'parametres') ecranPrecedent = ecranCourant;
   ecranCourant = nom;
   for (const e of ['tirage', 'menus', 'liste', 'parametres']) $(`#ecran-${e}`).hidden = e !== nom;
-  ({ tirage: rendreTirage, menus: rendreMenus, liste: rendreListe, parametres: rendreParametres })[nom]();
+  rendre();
   window.scrollTo(0, 0);
 }
+// Redessine l'écran en cours sans changer la position dans la page.
+const rendre = () => ({ tirage: rendreTirage, menus: rendreMenus, liste: rendreListe, parametres: rendreParametres })[ecranCourant]();
 
 // ---------- Écran Tirage ----------
 
@@ -159,7 +161,7 @@ function ajouter(saisie) {
   if (!etat.ajouts.includes(nom)) etat.ajouts.push(nom);
   if (etat.liste) majListe();
   sauver();
-  afficher(ecranCourant);
+  rendre();
   return true;
 }
 
@@ -167,7 +169,7 @@ function retirer(nom) {
   etat.ajouts = etat.ajouts.filter((n) => n !== nom);
   if (etat.liste) majListe();
   sauver();
-  afficher(ecranCourant);
+  rendre();
 }
 
 document.querySelectorAll('form.ajout').forEach((f) => f.addEventListener('submit', (e) => {
@@ -410,7 +412,7 @@ function rendreMenus(anim = false) {
   const menus = etat.menus || [];
   const occ = (k, r, nom) => `<span class="occ${selection.has(cleOcc(k, r, nom)) ? ' choisi' : ''}"
     data-menu="${k}" data-role="${r}" data-nom="${esc(nom)}">${esc(nom)}</span>`;
-  $('#menus-surtitre').textContent = `${menus.length} menus · ${etat.personnes} personne${etat.personnes > 1 ? 's' : ''}`;
+  $('#menus-surtitre').textContent = `${menus.length} menu${menus.length > 1 ? 's' : ''} · ${etat.personnes} personne${etat.personnes > 1 ? 's' : ''}`;
   $('#menus').innerHTML = menus.map((m, k) => {
     const cible = deplacement && deplacement.menu !== k ? ' cible' : '';
     return `<div class="carte menu${cible}${anim ? ' retourne' : ''}" data-menu="${k}" style="--i:${k}">
@@ -587,7 +589,11 @@ $('#retour').addEventListener('click', () => afficher(ecranPrecedent));
 
 appliquerTheme();
 try {
-  base = lireCSV(await (await fetch('ingredients.csv')).text());
+  const octets = await (await fetch('ingredients.csv')).arrayBuffer();
+  let texte = new TextDecoder().decode(octets);
+  // Réenregistré depuis Excel, le fichier est souvent en Windows-1252 : les accents deviennent illisibles en UTF-8.
+  if (texte.includes('\uFFFD')) texte = new TextDecoder('windows-1252').decode(octets);
+  base = lireCSV(texte);
 } catch {
   base = [];
 }
