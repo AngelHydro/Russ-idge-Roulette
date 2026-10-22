@@ -1,6 +1,6 @@
 import { budgetMinimum, tirerVarie } from './tirage.js';
 import {
-  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts,
+  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit,
 } from './menus.js';
 
 const CATEGORIES = [
@@ -148,15 +148,19 @@ function rendreTirage() {
 
 // ---------- Articles à racheter (Tirage et Liste) ----------
 
-function ajouter(nom) {
-  nom = nom.trim();
-  if (!nom) return;
-  if (!parNom.has(nom)) return message('Produit inconnu');
+// Renvoie true si l'article est ajouté (le champ peut alors être vidé).
+function ajouter(saisie) {
+  if (!saisie.trim()) return false;
+  const nom = chercherProduit(saisie, [...parNom.keys()]);
+  if (!nom) return message('Produit inconnu'), false;
+  // Déjà acheté pour les menus : on ne le réserve pas une deuxième fois.
+  if (achatsMenus().has(nom)) return message('Déjà dans la liste'), false;
   message('');
   if (!etat.ajouts.includes(nom)) etat.ajouts.push(nom);
   if (etat.liste) majListe();
   sauver();
   afficher(ecranCourant);
+  return true;
 }
 
 function retirer(nom) {
@@ -168,8 +172,7 @@ function retirer(nom) {
 
 document.querySelectorAll('form.ajout').forEach((f) => f.addEventListener('submit', (e) => {
   e.preventDefault();
-  ajouter(f.elements.ajout.value);
-  f.elements.ajout.value = '';
+  if (ajouter(f.elements.ajout.value)) f.elements.ajout.value = '';
 }));
 $('#racheter .ajouts').addEventListener('click', (e) => {
   const b = e.target.closest('[data-retirer]');
@@ -228,7 +231,10 @@ function lancerTirage({ remplace = false } = {}) {
   const items = reste < 0 ? null : tirerVarie(pm, counts, reste, recents);
   if (!items || !items.length) {
     if (ecranCourant === 'tirage') rendreTirage();
-    if (!items) message(`Budget insuffisant : il faut au moins ${euros(budgetMinimum(pm, counts) + reserveAjouts())}`);
+    const texte = `Budget insuffisant : il faut au moins ${euros(budgetMinimum(pm, counts) + reserveAjouts())}`;
+    if (items && ecranCourant !== 'tirage') message('Aucun ingrédient à tirer');
+    else if (!items && ecranCourant === 'tirage') { $('#minimum').textContent = texte; $('#minimum').classList.add('alerte'); }
+    else if (!items) message(texte);
     return false;
   }
   const noms = items.map((i) => i.nom);

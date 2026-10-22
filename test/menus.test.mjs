@@ -1,7 +1,7 @@
 // Lancer : node test/menus.test.mjs
 import assert from 'node:assert/strict';
 import { tirer, budgetMinimum } from '../tirage.js';
-import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts } from '../menus.js';
+import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit } from '../menus.js';
 
 const ing = (nom, categorie, quantite, prix, portion, unite = 'g') => ({ nom, categorie, quantite, prix, portion, unite });
 const poulet = ing('poulet', 'Viandes et poissons', 300, 400, 120);
@@ -136,5 +136,12 @@ assert.equal(alerte(complets, parNom), '');
 // Articles à racheter : un paquet chacun, sans compter deux fois ce qui est déjà acheté pour les menus.
 assert.equal(coutAjouts(['banane', 'inconnu'], parNom, new Map()), 260);
 assert.equal(coutAjouts(['banane'], parNom, new Map([['banane', 1]])), 0);
+
+// Saisie d'un article : majuscules, apostrophe courbe (iPhone) et espaces n'empêchent pas de le trouver.
+const noms2 = ["Huile d'olive", 'Lait demi-écrémé', 'Ail'];
+assert.equal(chercherProduit('huile d’olive', noms2), "Huile d'olive");
+assert.equal(chercherProduit('  AIL ', noms2), 'Ail');
+assert.equal(chercherProduit('lait demi-écrémé', noms2), 'Lait demi-écrémé');
+assert.equal(chercherProduit('truc', noms2), null);
 
 console.log('menus : OK');

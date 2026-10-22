@@ -50,6 +50,14 @@ export function total(achatsMap, parNom) {
   return t;
 }
 
+// Retrouve un produit d'après ce qui a été tapé, sans tenir compte des majuscules, des espaces autour
+// ni de l'apostrophe courbe que le clavier de l'iPhone met à la place de « ' ». null si introuvable.
+const cleSaisie = (s) => s.normalize('NFC').replace(/[’‘]/g, "'").trim().toLocaleLowerCase('fr');
+export function chercherProduit(saisie, noms) {
+  const k = cleSaisie(saisie);
+  return noms.find((n) => cleSaisie(n) === k) ?? null;
+}
+
 // Articles à racheter : un paquet chacun, sauf ceux déjà achetés pour les menus ; les noms inconnus sont ignorés.
 export const coutAjouts = (ajouts, parNom, achatsMap) =>
   ajouts.filter((n) => parNom.has(n) && !achatsMap.has(n)).reduce((t, n) => t + parNom.get(n).prix, 0);
