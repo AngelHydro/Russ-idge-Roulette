@@ -1,6 +1,6 @@
 # Russ'idge Roulette
 
-App mobile perso qui tire des ingrédients au hasard (par catégorie, sans dépasser un budget) et en fait une liste de courses.
+App mobile perso qui tire des ingrédients au hasard (par catégorie, sans dépasser un budget), les répartit en menus équilibrés et en fait une liste de courses.
 
 C'est une app web installable (PWA) : une seule app pour Android et iPhone, sans store, qui marche hors connexion. Aucun serveur ni compte : chaque téléphone garde ses propres réglages et sa liste.
 
@@ -14,8 +14,11 @@ L'app doit être servie en HTTPS. Le plus simple est GitHub Pages :
 
 ## Utilisation
 
-- **Tirage** : nombre d'ingrédients par catégorie (− / +), budget (curseur par 5 €, ou tap sur le montant pour le saisir). Le budget minimum s'affiche en direct.
-- **Liste** : regroupée par rayon. Tap = cocher. Appui long = sélectionner, puis *Relancer*, *Relancer le reste* ou *Masquer*.
+Le parcours : Tirage → Menus → Liste.
+
+- **Tirage** : nombre de menus et de personnes, nombre d'ingrédients par catégorie (− / +), budget (curseur par 5 €, ou tap sur le montant pour le saisir). Le budget minimum et celui qui permet de compléter tous les menus s'affichent en direct.
+- **Menus** : chaque menu = une protéine, un féculent ou une légumineuse, un légume ; fruits, desserts, boissons et pain sont répartis en à-côtés. Un ingrédient peut resservir dans plusieurs menus si le budget le permet, sinon le menu reste incomplet et l'app le signale. Appui long = sélectionner, puis *Déplacer* (vers un autre menu), *Relancer*, *Relancer le reste* ou *Masquer*.
+- **Liste** : regroupée par rayon, avec le nombre de paquets à acheter. Tap = cocher.
 - **Paramètres** (⚙) : prix au paquet ou au kilo, son du clic, ingrédients masqués.
 
 ## Les ingrédients : `ingredients.csv`
@@ -38,6 +41,7 @@ Lentilles vertes;Légumineuses;Épicerie;1,35;500;g;60
 ```bash
 python -m http.server 8642   # puis ouvrir http://localhost:8642
 node test/tirage.test.mjs    # vérifie la logique de tirage
+node test/menus.test.mjs     # vérifie la répartition en menus
 ```
 
 Après une modification des fichiers de l'app, changer `CACHE` dans `sw.js` (`russidge-v2`…) pour que les téléphones prennent la nouvelle version.
