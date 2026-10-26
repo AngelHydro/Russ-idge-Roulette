@@ -85,9 +85,10 @@ function articles() {
 
 function quantite(i) {
   const q = i.quantite;
-  if (i.unite === 'g') return q >= 1000 ? `${nombre(q / 1000)} kg` : `${nombre(q)} g`;
-  if (i.unite === 'ml') return q >= 1000 ? `${nombre(q / 1000)} L` : `${nombre(q / 10)} cl`;
-  return `${nombre(q)} ${i.unite}${q > 1 && i.unite === 'pièce' ? 's' : ''}`;
+  // Espaces insécables : « 400 g » ou « 2 × 500 g » ne se coupent pas en fin de ligne.
+  if (i.unite === 'g') return q >= 1000 ? `${nombre(q / 1000)}\u00a0kg` : `${nombre(q)}\u00a0g`;
+  if (i.unite === 'ml') return q >= 1000 ? `${nombre(q / 1000)}\u00a0L` : `${nombre(q / 10)}\u00a0cl`;
+  return `${nombre(q)}\u00a0${i.unite}${q > 1 && i.unite === 'pièce' ? 's' : ''}`;
 }
 
 function prixAffiche(i) {
@@ -113,6 +114,7 @@ const rendre = () => ({ tirage: rendreTirage, menus: rendreMenus, liste: rendreL
 const REGLAGES = { nbMenus: ['Menus', 1, 14], personnes: ['Personnes', 1, 8] };
 
 function rendreTirage() {
+  $('#semaine').textContent = semaine();
   const p = pool();
   const counts = countsEffectifs(p);
   $('#reglages-menus').innerHTML = Object.entries(REGLAGES).map(([cle, [nom]]) => `
@@ -278,7 +280,6 @@ function semaine(d = new Date()) {
   j.setUTCDate(j.getUTCDate() + 4 - (j.getUTCDay() || 7));
   return Math.ceil(((j - Date.UTC(j.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
 }
-$('#semaine').textContent = semaine();
 
 // La liste de courses suit les menus et les ajouts : un article par produit acheté, en gardant les coches.
 function majListe() {
@@ -339,7 +340,7 @@ function nbPaquets() {
   const a = achatsMenus();
   return Object.assign((nom) => a.get(nom) || 1, { menus: a });
 }
-const qteArticle = (i, p) => (p > 1 ? `${p} × ${quantite(i)}` : quantite(i));
+const qteArticle = (i, p) => (p > 1 ? `${p}\u00a0×\u00a0${quantite(i)}` : quantite(i));
 const prixArticles = (lignes, pq) => somme(lignes.map((l) => pq(l.nom) * parNom.get(l.nom).prix));
 
 function rendreListe(anim = false) {
@@ -359,7 +360,7 @@ function rendreListe(anim = false) {
       const retirer = etat.ajouts.includes(l.nom) && !pq.menus.has(l.nom)
         ? ` <button class="retirer" data-retirer="${esc(l.nom)}" aria-label="Retirer ${esc(l.nom)}">✕</button>` : '';
       return `<div class="${classes}" data-nom="${esc(l.nom)}" style="--i:${n++}">
-        <span>${esc(i.nom)} <span class="poids">· ${qteArticle(i, pq(l.nom))}</span>${retirer}</span>
+        <span>${esc(i.nom)} <span class="poids">·&nbsp;${qteArticle(i, pq(l.nom))}</span>${retirer}</span>
         <span class="prix">${etat.prix === 'kilo' ? prixAffiche(i) : euros(pq(l.nom) * i.prix)}</span></div>`;
     }).join('') + '</div>',
   ).join('');

@@ -1,7 +1,7 @@
 // Lancer : node test/menus.test.mjs
 import assert from 'node:assert/strict';
 import { tirer, budgetMinimum } from '../tirage.js';
-import { role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit, produitsCommencantPar } from '../menus.js';
+import { ROLES_MENU, role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit, produitsCommencantPar } from '../menus.js';
 
 const ing = (nom, categorie, quantite, prix, portion, unite = 'g') => ({ nom, categorie, quantite, prix, portion, unite });
 const poulet = ing('poulet', 'Viandes et poissons', 300, 400, 120);
@@ -151,5 +151,22 @@ assert.equal(chercherProduit('lait', noms3), 'Lait'); // le nom exact passe avan
 assert.equal(chercherProduit('lai', noms3), null); // ambigu
 assert.deepEqual(produitsCommencantPar('LAI', noms3), ['Lait entier', 'Lait de soja', 'Lait']); // pour dire « précise »
 assert.equal(chercherProduit('  ', noms3), null);
+
+// Reprises gratuites : un menu complété ne recopie pas un menu existant.
+const gros = (nom, categorie) => ing(nom, categorie, 1000, 300, 100); // 10 portions par paquet : reprise gratuite
+const pv3 = new Map(['A', 'A2'].map((n) => [n, gros(n, 'Viandes et poissons')])
+  .concat(['B', 'B2'].map((n) => [n, gros(n, 'Féculents')]), ['C', 'C2'].map((n) => [n, gros(n, 'Légumes')])));
+const base3 = [
+  { proteine: ['A'], feculent: ['B'], legume: ['C'], cotes: [] },
+  { proteine: ['A2'], feculent: ['B2'], legume: ['C2'], cotes: [] },
+  { proteine: [], feculent: [], legume: [], cotes: [] },
+];
+const sig = (m) => ROLES_MENU.map((r) => m[r].join()).join('|');
+for (const rand of [() => 0, () => 0.99, Math.random, Math.random, Math.random]) {
+  const [m1, m2, m3] = completer(base3, pv3, 1, 1000, rand);
+  assert.equal(incomplets([m3]), 0);
+  assert.notEqual(sig(m3), sig(m1));
+  assert.notEqual(sig(m3), sig(m2));
+}
 
 console.log('menus : OK');
