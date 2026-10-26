@@ -250,7 +250,35 @@ function lancerTirage({ remplace = false } = {}) {
   roulette(1500, () => { afficher('menus'); rendreMenus(true); });
   return true;
 }
-$('#lancer').addEventListener('click', () => lancerTirage());
+// Maintenir pour tirer : le geste laisse un temps d'hésitation. Repli : deux taps rapprochés, ou Entrée / lecteur
+// d'écran (clic sans pointeur, detail 0).
+const MAINTIEN = 900; // ms, la durée de la jauge dans style.css
+const boutonLancer = $('#lancer');
+let maintien = null;
+let tireParMaintien = false;
+let dernierTap = -Infinity;
+const relacher = () => { clearTimeout(maintien); boutonLancer.classList.remove('charge'); };
+boutonLancer.addEventListener('pointerdown', (e) => {
+  if (e.button) return;
+  tireParMaintien = false;
+  boutonLancer.classList.add('charge');
+  maintien = setTimeout(() => { relacher(); tireParMaintien = true; lancerTirage(); }, MAINTIEN);
+});
+for (const t of ['pointerup', 'pointerleave', 'pointercancel']) boutonLancer.addEventListener(t, relacher);
+boutonLancer.addEventListener('contextmenu', (e) => e.preventDefault());
+boutonLancer.addEventListener('click', (e) => {
+  if (tireParMaintien) { tireParMaintien = false; return; } // le clic qui suit le relâchement
+  if (e.detail === 0 || e.timeStamp - dernierTap < 400) { dernierTap = -Infinity; lancerTirage(); return; }
+  dernierTap = e.timeStamp;
+});
+
+// Numéro de semaine ISO, pour le cachet « Приказ № … » de l'en-tête.
+function semaine(d = new Date()) {
+  const j = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  j.setUTCDate(j.getUTCDate() + 4 - (j.getUTCDay() || 7));
+  return Math.ceil(((j - Date.UTC(j.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
+}
+$('#semaine').textContent = semaine();
 
 // La liste de courses suit les menus et les ajouts : un article par produit acheté, en gardant les coches.
 function majListe() {

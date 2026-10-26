@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4f1ec">
+  <meta name="theme-color" content="#eee3c6">
   <title>Russ'idge Roulette</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -14,10 +14,11 @@
   <section id="ecran-tirage" hidden>
     <header>
       <div>
-        <p class="surtitre">Cette semaine</p>
-        <h1>Russ'idge Roulette</h1>
+        <p class="tampon">Приказ № <span id="semaine"></span></p>
+        <h1>Russ'idge<br><span class="rouge">Roulette</span></h1>
+        <div class="chambres" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><i></i></div>
       </div>
-      <button class="icone" data-ecran="parametres" aria-label="Paramètres">⚙</button>
+      <button class="icone" data-ecran="parametres" aria-label="Paramètres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
     </header>
     <ul id="reglages-menus" class="carte lignes"></ul>
     <ul id="categories" class="carte lignes"></ul>
@@ -33,7 +34,8 @@
       <input id="budget-curseur" type="range" min="0" max="200" step="5" aria-label="Budget">
       <p id="minimum" class="discret"></p>
     </div>
-    <button id="lancer" class="principal">Lancer la roulette</button>
+    <button id="lancer" class="principal" aria-label="Lancer la roulette : maintenir, ou toucher deux fois"><svg viewBox="-50 -50 100 100" aria-hidden="true"><circle r="46" fill="none" stroke="currentColor" stroke-width="8"/><circle cy="-26" r="9" fill="currentColor" transform="rotate(0.0)"/><circle cy="-26" r="9" fill="currentColor" transform="rotate(51.43)"/><circle cy="-26" r="9" fill="currentColor" transform="rotate(102.86)"/><circle cy="-26" r="9" fill="currentColor" transform="rotate(154.29)"/><circle cy="-26" r="9" fill="currentColor" transform="rotate(205.71)"/><circle cy="-26" r="9" fill="currentColor" transform="rotate(257.14)"/><circle cy="-26" r="9" fill="none" stroke="currentColor" stroke-width="5" transform="rotate(308.57)"/></svg>Maintenir pour tirer<span class="jauge" aria-hidden="true"></span></button>
+    <p class="aide" aria-hidden="true">Maintenir · ou toucher deux fois</p>
   </section>
 
   <section id="ecran-menus" hidden>
@@ -42,7 +44,7 @@
         <p id="menus-surtitre" class="surtitre"></p>
         <h1>Mes menus</h1>
       </div>
-      <button class="icone" data-ecran="parametres" aria-label="Paramètres">⚙</button>
+      <button class="icone" data-ecran="parametres" aria-label="Paramètres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
     </header>
     <p id="alerte-menus" hidden></p>
     <div id="menus"></div>
@@ -57,7 +59,7 @@
       <div class="carte totaux">
         <div><p class="surtitre">Total</p><span id="total-menus"></span></div>
       </div>
-      <button id="voir-liste" class="principal">Voir la liste de courses</button>
+      <button id="voir-liste" class="principal noir">Voir la liste de courses</button>
     </footer>
   </section>
 
@@ -68,8 +70,8 @@
         <h1>Ma liste</h1>
       </div>
       <span>
-        <button id="partager" class="icone" aria-label="Partager">⤴</button>
-        <button class="icone" data-ecran="parametres" aria-label="Paramètres">⚙</button>
+        <button id="partager" class="icone" aria-label="Partager"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"/></svg></button>
+        <button class="icone" data-ecran="parametres" aria-label="Paramètres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
       </span>
     </header>
     <form class="ajout carte"><input name="ajout" list="suggestions" placeholder="Ajouter un article…" autocomplete="off" aria-label="Article à ajouter"><button>Ajouter</button></form>
@@ -89,7 +91,8 @@
   <section id="ecran-parametres" hidden>
     <header>
       <div>
-        <button id="retour" class="icone retour" aria-label="Retour">←</button>
+        <button id="retour" class="icone retour" aria-label="Retour"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+        <p class="tampon">Настройки</p>
         <h1>Paramètres</h1>
       </div>
     </header>
@@ -127,12 +130,12 @@
   </section>
 
   <div id="roulette" hidden>
-    <svg class="barillet" viewBox="-50 -50 100 100" aria-hidden="true">
-      <circle r="46" class="corps"/>
-      <circle cy="-27" r="11"/><circle cx="23.4" cy="-13.5" r="11"/><circle cx="23.4" cy="13.5" r="11"/>
-      <circle cy="27" r="11"/><circle cx="-23.4" cy="13.5" r="11"/><circle cx="-23.4" cy="-13.5" r="11"/>
-      <circle r="6"/>
-    </svg>
+    <div class="socle"><svg class="barillet" viewBox="-50 -50 100 100" aria-hidden="true">
+      <circle r="47" class="corps"/>
+      <ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(0.0)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(51.43)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(102.86)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(154.29)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(205.71)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(257.14)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(308.57)"/>
+      <circle cy="-27" r="9.5" transform="rotate(0.0)"/><circle cy="-27" r="9.5" transform="rotate(51.43)"/><circle cy="-27" r="9.5" transform="rotate(102.86)"/><circle cy="-27" r="9.5" transform="rotate(154.29)"/><circle cy="-27" r="9.5" transform="rotate(205.71)"/><circle cy="-27" r="9.5" transform="rotate(257.14)"/><circle cy="-27" r="9.5" class="balle" transform="rotate(308.57)"/>
+      <circle r="5.5"/>
+    </svg></div>
   </div>
 
   <datalist id="suggestions"></datalist>
