@@ -174,8 +174,9 @@ input[type=range]::-moz-range-thumb { width: 4px; height: 28px; border: none; bo
 input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-offset: 2px; }
 
 /* Maintenir pour tirer : la jauge se remplit comme une détente qu'on presse. */
+/* Le bouton reste en bas de l'écran (pied de page collant, comme sur Menus et Liste). */
 #lancer {
-  margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation;
 }
 #lancer svg { width: 22px; height: 22px; flex: none; }
