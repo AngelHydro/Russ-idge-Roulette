@@ -49,3 +49,5 @@ node test/menus.test.mjs     # vérifie la répartition en menus
 Après une modification des fichiers de l'app, changer `CACHE` dans `sw.js` (`russidge-v9`…) : l'app est servie depuis le cache du téléphone, qui ne prend une nouvelle version qu'à ce signal. Seul `ingredients.csv` se met à jour sans cela (au lancement suivant).
 
 Les icônes PNG (`icon-180.png` pour l'iPhone, `icon-192.png` et `icon-512.png` pour Android) sont tirées de `icon.svg` : les refaire si le logo change.
+
+Les polices sont embarquées dans `polices/` pour marcher hors connexion : Archivo et PT Mono (pour le cyrillique des cachets), toutes deux sous licence SIL Open Font License. Les textures `grain.webp` (papier) et `encre.webp` (manques d'encre des tampons) sont de petites images en mosaïque : elles remplacent des filtres SVG trop coûteux sur téléphone.
