@@ -9,6 +9,13 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="stylesheet" href="style.css">
+  <!-- Chargés d'avance : sinon ils ne partent qu'au premier affichage du texte, qui saute alors d'une police à l'autre
+       et voit les tampons apparaître après coup (masque d'encre). -->
+  <link rel="preload" href="polices/archivo.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="polices/pt-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="polices/pt-mono-cyrillique.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="encre.webp" as="image" crossorigin>
+  <link rel="preload" href="grain.webp" as="image">
 </head>
 <body>
   <section id="ecran-tirage" hidden>

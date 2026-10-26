@@ -192,7 +192,10 @@ export function completer(menus, parNom, personnes, budget, rand = Math.random) 
         return { n, surcout: (paquets(i, u.get(n) + 1, personnes) - paquets(i, u.get(n), personnes)) * i.prix };
       }).sort((a, b) => a.surcout - b.surcout); // trié : avec rand = () => 0, on prend le moins cher (budgetComplet)
       const gratuits = candidats.filter((c) => c.surcout === 0);
-      const possibles = gratuits.length ? gratuits : candidats.filter((c) => t + c.surcout <= budget);
+      // Parmi les reprises gratuites, éviter de remettre ensemble ce qu'un autre menu sert déjà (sinon deux menus identiques).
+      const ensemble = (n) => out.some((x) => x !== m && x[r].includes(n) && ROLES_MENU.some((r2) => m[r2].some((k) => x[r2].includes(k))));
+      const varies = gratuits.filter((c) => !ensemble(c.n));
+      const possibles = varies.length ? varies : gratuits.length ? gratuits : candidats.filter((c) => t + c.surcout <= budget);
       if (possibles.length) m[r].push(auHasard(possibles, rand).n);
     }
   }
