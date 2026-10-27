@@ -44,7 +44,7 @@
 }
 
 /* Encre de tampon : manques d'encre localisés ; « appuyé » = l'encre s'éclaircit vers un bord. */
-.tampon, h1 .rouge, .titre-roulette .rouge, button.principal, #rentrer, .icone, .montant, .compteur button,
+.tampon, h1 .rouge, .titre-roulette .rouge, button.principal, #rentrer, .icone, .montant,
 #actions button, #masques button, .segment label:has(input:checked), input[role=switch], .barillet, #ticket-liste::before {
   -webkit-mask: url(encre.webp) 0 0 / 256px;
   mask: url(encre.webp) 0 0 / 256px;
@@ -132,37 +132,47 @@ button.principal.noir {
 #ecran-tirage .tampon { margin-bottom: 6px; }
 #ecran-tirage .chambres { margin-top: 8px; }
 /* Menus et personnes côte à côte : une seule ligne pour la tablée. */
-#reglages-menus { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; }
-#reglages-menus li { border-bottom: none; }
+#reglages-menus { display: flex; flex-wrap: wrap; column-gap: 18px; }
+#reglages-menus li { flex: 1 1 auto; border-bottom: none; }
 #categories li.vide > span:first-child { color: var(--vide); }
 .compteur { display: flex; align-items: center; gap: 8px; }
+/* Le bouton (zone de toucher) déborde de 4 px sur les côtés et 2 px en haut et en bas, sans changer la mise en page ;
+   l'anneau tamponné de 26 px est dessiné par ::before (un masque sur le bouton rognerait aussi la zone de toucher). */
 .compteur button {
-  width: 26px; height: 26px; padding: 0; border-radius: 50%; border: var(--anneau);
+  position: relative; width: 34px; height: 30px; margin: -2px -4px; padding: 0; border-radius: 0;
   color: var(--accent); font: 14px/1 var(--mono);
+}
+.compteur button::before {
+  content: ''; position: absolute; inset: 2px 4px; border-radius: 50%; border: var(--anneau);
+  -webkit-mask: url(encre.webp) 0 0 / 256px; mask: url(encre.webp) 0 0 / 256px;
 }
 .compteur output { display: inline-block; min-width: 1.4em; text-align: center; font: 700 15px var(--mono); }
 .compteur output.roule-haut { animation: roule .28s cubic-bezier(.5, 1.6, .5, 1); --de: 70%; }
 .compteur output.roule-bas { animation: roule .28s cubic-bezier(.5, 1.6, .5, 1); --de: -70%; }
 @keyframes roule { from { transform: translateY(var(--de)); opacity: 0; } }
 .montant.reimprime { animation: reimprime .4s; }
-@keyframes reimprime { 30% { opacity: .15; transform: rotate(-2deg) scale(1.12); } 60% { opacity: 1; transform: rotate(-3.5deg) scale(.97); } }
+.montant.reimprime { transform-origin: left center; }
+@keyframes reimprime { 30% { opacity: .15; transform: rotate(-2deg) scale(1.05); } 60% { opacity: 1; transform: rotate(-3deg) scale(.98); } }
 /* Rangée des 7 chambres du Nagant : la balle avance d'un cran à chaque « clic ». */
 .chambres { position: relative; display: flex; gap: 5px; margin-top: 10px; width: max-content; }
 .chambres span { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--texte); }
 .chambres i { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); animation: clic 4.2s steps(7, end) infinite; }
 @keyframes clic { to { transform: translateX(105px); } }
 
-.budget { display: grid; grid-template-columns: auto 1fr; align-items: end; column-gap: 12px; row-gap: 2px; }
-.budget > .surtitre, .budget input[type=range] { grid-column: 1 / -1; }
-#ecran-tirage .montant { grid-row: 2; margin-bottom: 6px; }
-#minimum { grid-row: 2; grid-column: 2; align-self: center; text-align: right; font-size: 12px; }
+/* Budget : intitulé, puis montant et minimum côte à côte, puis curseur. Le pied de page collant ne doit pas le cacher. */
+.budget { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; scroll-margin-bottom: 100px; }
+.budget > .surtitre, .budget > input[type=range] { grid-column: 1 / -1; }
+.budget > .montant { grid-row: 2; grid-column: 1; align-self: center; margin-bottom: 6px; }
+.budget > #minimum { grid-row: 2; grid-column: 2; align-self: center; text-align: right; font-size: 11.5px; line-height: 1.3; }
 /* Montant dans un cachet à double filet : signale qu'un tap ouvre le clavier */
 .montant {
-  align-self: flex-start; display: inline-flex; align-items: baseline; gap: 4px; margin-top: 4px; padding: 0 10px;
+  display: inline-flex; align-items: baseline; gap: 4px; margin-top: 4px; padding: 0 10px;
   border: 4px double var(--accent); border-radius: 6px; color: var(--accent);
   font: 700 34px/1 var(--mono); transform: rotate(-2deg);
 }
+/* Plafonné : un montant saisi très long ne doit pas écraser le minimum à côté. */
 .montant input {
+  max-width: 5.2ch; /* « 85,50 » tient ; au-delà, le texte défile dans le champ */
   width: 3.2ch; font: inherit; color: inherit; background: none; border: none; padding: 0; margin: 0;
   text-align: right; outline: none;
 }
