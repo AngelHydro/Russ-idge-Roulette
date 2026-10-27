@@ -125,11 +125,19 @@ button.principal.noir {
 }
 
 /* Écran Tirage : tout doit tenir sur un écran de téléphone */
-#categories li, #reglages-menus li { padding: 4px 0; }
+#categories li, #reglages-menus li { padding: 2px 0; }
+#ecran-tirage { gap: 10px; padding-top: max(14px, env(safe-area-inset-top)); }
+#ecran-tirage h1 { font-size: 36px; }
+#ecran-tirage footer { padding-top: 6px; gap: 6px; }
+#ecran-tirage .tampon { margin-bottom: 6px; }
+#ecran-tirage .chambres { margin-top: 8px; }
+/* Menus et personnes côte à côte : une seule ligne pour la tablée. */
+#reglages-menus { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; }
+#reglages-menus li { border-bottom: none; }
 #categories li.vide > span:first-child { color: var(--vide); }
 .compteur { display: flex; align-items: center; gap: 8px; }
 .compteur button {
-  width: 28px; height: 28px; padding: 0; border-radius: 50%; border: var(--anneau);
+  width: 26px; height: 26px; padding: 0; border-radius: 50%; border: var(--anneau);
   color: var(--accent); font: 14px/1 var(--mono);
 }
 .compteur output { display: inline-block; min-width: 1.4em; text-align: center; font: 700 15px var(--mono); }
@@ -144,7 +152,10 @@ button.principal.noir {
 .chambres i { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); animation: clic 4.2s steps(7, end) infinite; }
 @keyframes clic { to { transform: translateX(105px); } }
 
-.budget { display: flex; flex-direction: column; gap: 4px; }
+.budget { display: grid; grid-template-columns: auto 1fr; align-items: end; column-gap: 12px; row-gap: 2px; }
+.budget > .surtitre, .budget input[type=range] { grid-column: 1 / -1; }
+#ecran-tirage .montant { grid-row: 2; margin-bottom: 6px; }
+#minimum { grid-row: 2; grid-column: 2; align-self: center; text-align: right; font-size: 12px; }
 /* Montant dans un cachet à double filet : signale qu'un tap ouvre le clavier */
 .montant {
   align-self: flex-start; display: inline-flex; align-items: baseline; gap: 4px; margin-top: 4px; padding: 0 10px;
