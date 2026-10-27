@@ -56,7 +56,9 @@
       <button class="icone" data-ecran="parametres" aria-label="Paramètres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
     </header>
     <p id="alerte-menus" hidden></p>
+    <div class="fente" aria-hidden="true"></div>
     <div class="ticket" id="ticket-menus">
+      <p class="cachet">Приказ № <span id="cachet-semaine"></span></p>
       <div id="menus"></div>
       <div class="totaux"><p class="surtitre">Total estimé</p><span id="total-menus"></span></div>
     </div>
@@ -87,6 +89,7 @@
     <div class="ticket" id="ticket-liste">
       <div id="liste"></div>
       <div class="totaux"><p class="surtitre">Total<br><span id="reste"></span></p><span id="total"></span></div>
+      <div id="ligne-depassement" hidden><span>*** Dépassement ***</span><b></b></div>
     </div>
     <footer>
       <p class="message discret" hidden></p>
@@ -138,7 +141,7 @@
   </section>
 
   <div id="roulette" hidden>
-    <div class="socle"><p class="tampon">Секретно · № <span id="secret"></span></p><svg class="barillet" viewBox="-50 -50 100 100" aria-hidden="true">
+    <div class="socle"><p class="tampon">Секретно · № <span id="secret"></span></p><span class="repere" aria-hidden="true"></span><svg class="barillet" viewBox="-50 -50 100 100" aria-hidden="true">
       <circle r="47" class="corps"/>
       <ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(0.0)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(51.43)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(102.86)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(154.29)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(205.71)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(257.14)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(308.57)"/>
       <circle cy="-27" r="9.5" transform="rotate(0.0)"/><circle cy="-27" r="9.5" transform="rotate(51.43)"/><circle cy="-27" r="9.5" transform="rotate(102.86)"/><circle cy="-27" r="9.5" transform="rotate(154.29)"/><circle cy="-27" r="9.5" transform="rotate(205.71)"/><circle cy="-27" r="9.5" transform="rotate(257.14)"/><circle cy="-27" r="9.5" class="balle" transform="rotate(308.57)"/>
