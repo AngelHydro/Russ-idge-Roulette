@@ -1,5 +1,6 @@
-/* DA « administration impériale » : papier, encre de tampon, cachets violets, relief enfoncé.
-   Clair = papier jauni ; sombre = dossier sous la lampe. Thème : auto (téléphone), ou forcé via data-theme sur <html>.
+/* DA « feuille minimaliste » : une feuille de papier, des filets doubles entre les blocs, l'encre de tampon
+   pour tout ce qui se touche (double anneau), et des tickets de caisse en machine à écrire pour les menus et la liste.
+   Pas de relief simulé : ce qui est interactif se distingue par l'encre. Thème : auto, ou forcé via data-theme sur <html>.
    Textures : deux images fixes en mosaïque (grain.webp, encre.webp), pas de filtre SVG, trop coûteux sur téléphone. */
 @font-face { font-family: 'Archivo'; src: url(polices/archivo.woff2) format('woff2'); font-weight: 400 900; font-stretch: 62% 125%; font-display: swap; }
 @font-face { font-family: 'PT Mono'; src: url(polices/pt-mono-latin.woff2) format('woff2'); font-display: swap;
@@ -9,54 +10,46 @@
 
 :root {
   --fond: #eee3c6;
-  --fond-bas: #dccba5;
-  --carte: #f7efd9;
-  --ticket: #fffdf8;
+  --ticket: #fbf8f0;
   --texte: #1e1a15;
   --discret: #6b5a44;
   --vide: #776a57;
-  --trait: #dccfb8;
-  --bord: #d8cbb2;
-  --pile: #efe6d4;
-  --pile-bord: #cdbfa4;
+  --trait: #d3c4a6;
   --accent: #9e2a20;
   --bouton: #9e2a20;
   --sur-accent: #fff6ea;
   --violet: #4b3a8e;
-  --creux: rgba(70, 45, 20, .32);
-  --lumiere: #fff;
-  --ombre: rgba(70, 45, 20, .45);
-  --fantome: rgba(30, 26, 21, .14);
+  --ombre: rgba(70, 45, 20, .35);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme=clair]) {
-    --fond: #241e17; --fond-bas: #0f0c09; --carte: #28221b; --ticket: #28221b; --texte: #ede3cc; --discret: #b8a688;
-    --vide: #958877; --trait: #3d342a; --bord: #3d342a; --pile: #1a1612; --pile-bord: #090705; --accent: #ec6a5c;
-    --bouton: #b03a30; --violet: #a595e6; --creux: rgba(0, 0, 0, .32); --lumiere: rgba(255, 236, 200, .1);
-    --ombre: rgba(0, 0, 0, .45); --fantome: rgba(0, 0, 0, .4);
+    --fond: #1b1714; --ticket: #26211c; --texte: #ede3cc; --discret: #b5a58a; --vide: #958877; --trait: #3a332b;
+    --accent: #ec6a5c; --bouton: #b03a30; --violet: #9d8be0; --ombre: rgba(0, 0, 0, .5);
     color-scheme: dark;
   }
 }
 :root[data-theme=sombre] {
-  --fond: #241e17; --fond-bas: #0f0c09; --carte: #28221b; --ticket: #28221b; --texte: #ede3cc; --discret: #b8a688;
-  --vide: #958877; --trait: #3d342a; --bord: #3d342a; --pile: #1a1612; --pile-bord: #090705; --accent: #ec6a5c;
-  --bouton: #b03a30; --violet: #a595e6; --creux: rgba(0, 0, 0, .32); --lumiere: rgba(255, 236, 200, .1);
-  --ombre: rgba(0, 0, 0, .45); --fantome: rgba(0, 0, 0, .4);
+  --fond: #1b1714; --ticket: #26211c; --texte: #ede3cc; --discret: #b5a58a; --vide: #958877; --trait: #3a332b;
+  --accent: #ec6a5c; --bouton: #b03a30; --violet: #9d8be0; --ombre: rgba(0, 0, 0, .5);
   color-scheme: dark;
 }
 :root {
   --mono: 'PT Mono', ui-monospace, monospace;
-  --enfonce: inset 0 3px 3px var(--creux), 0 -1px 0 var(--creux), 0 1px 0 var(--lumiere);
-  --pile-ombre: 5px 5px 0 -1px var(--pile), 5px 5px 0 0 var(--pile-bord), 0 14px 22px -14px var(--ombre);
+  --filet: 3px double var(--texte);
+  --anneau: 3px double var(--accent);
+  /* Bord bas dentelé des tickets, découpé par un masque (le fond du ticket reste une couleur pleine). */
+  --dentelle: linear-gradient(#000 0 0) top / 100% calc(100% - 7px) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 14px 7px repeat-x;
 }
 
 /* Encre de tampon : manques d'encre localisés ; « appuyé » = l'encre s'éclaircit vers un bord. */
-.tampon, h1 .rouge, button.principal, #rentrer, .icone, .montant, #depassement, #liste:not(:empty)::before {
+.tampon, h1 .rouge, .titre-roulette .rouge, button.principal, #rentrer, .icone, .montant, #depassement, .compteur button,
+#actions button, #masques button, .segment label:has(input:checked), input[role=switch], .barillet, #ticket-liste::before {
   -webkit-mask: url(encre.webp) 0 0 / 256px;
   mask: url(encre.webp) 0 0 / 256px;
 }
-.tampon, .montant, #liste:not(:empty)::before {
+.tampon, .montant, #ticket-liste::before {
   -webkit-mask: url(encre.webp) 0 0 / 256px, linear-gradient(100deg, #000 40%, rgba(0, 0, 0, .55));
   -webkit-mask-composite: source-in;
   mask: url(encre.webp) 0 0 / 256px, linear-gradient(100deg, #000 40%, rgba(0, 0, 0, .55));
@@ -67,7 +60,7 @@
 body {
   margin: 0;
   min-height: 100dvh;
-  background: url(grain.webp) 0 0 / 256px, radial-gradient(120% 80% at 50% 0%, var(--fond) 0%, var(--fond-bas) 100%);
+  background: url(grain.webp) 0 0 / 256px, var(--fond);
   color: var(--texte);
   font: 16px/1.4 'Archivo', system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
@@ -76,33 +69,34 @@ section {
   max-width: 560px;
   margin: 0 auto;
   min-height: 100dvh;
-  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  padding: max(20px, env(safe-area-inset-top)) 20px max(16px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 [hidden] { display: none !important; }
 
-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 4px 2px 6px; }
+header { display: flex; justify-content: space-between; align-items: flex-start; padding: 4px 0 2px; }
+header > div { display: flex; flex-direction: column; align-items: flex-start; }
 header > span { display: flex; gap: 8px; }
-h1 { font-size: 40px; line-height: .88; margin: 0; font-weight: 900; font-stretch: 72%; text-transform: uppercase; }
-/* Rouge imprimé légèrement décalé sur un noir : impression deux couleurs mal calée. */
-h1 .rouge { color: var(--accent); text-shadow: -2px -1px 0 var(--fantome); }
+h1 { font-size: 44px; line-height: .88; margin: 0; font-weight: 900; font-stretch: 70%; text-transform: uppercase; }
+h1 .rouge, .titre-roulette .rouge { color: var(--accent); }
 .surtitre { margin: 0 0 2px; font: 10.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--discret); }
 .tampon {
-  display: inline-block; margin: 0 0 8px; padding: 2px 6px; border: 1.5px solid var(--violet); border-radius: 4px;
-  font: 10.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--violet);
-  transform: rotate(-4.5deg); box-shadow: var(--enfonce);
+  display: inline-block; margin: 0 0 10px; padding: 2px 6px; border: 1.5px solid var(--violet); border-radius: 3px;
+  font: 10.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--violet); transform: rotate(-4deg);
 }
 .discret { color: var(--discret); font-size: 13px; margin: 0; }
 .alerte { color: var(--accent) !important; }
 
-/* Cartes : feuilles empilées à bord net. */
-.carte { background: var(--carte); border: 1px solid var(--bord); border-radius: 18px; padding: 14px 16px; box-shadow: var(--pile-ombre); }
-.lignes { list-style: none; margin: 0; padding: 4px 16px; }
+/* Blocs : pas de cartes, un filet double au-dessus de chaque bloc, comme sous un titre de registre. */
+.carte { border-top: var(--filet); padding-top: 10px; }
+header + .carte { border-top: none; padding-top: 0; }
+.carte > .surtitre { color: var(--texte); }
+.lignes { list-style: none; margin: 0; padding: 0; }
 .lignes li, .ligne {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
-  padding: 10px 0; border-bottom: 1px dashed var(--trait);
+  padding: 8px 0; border-bottom: 1px solid var(--trait);
 }
 .lignes li:last-child { border-bottom: none; }
 .ligne { border: none; padding: 2px 0; }
@@ -113,43 +107,44 @@ button {
 }
 button:active { transform: scale(.97); }
 button.icone {
-  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 50%;
-  border: 1.5px solid var(--texte); box-shadow: var(--enfonce);
+  display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%;
+  border: 3px double var(--texte);
 }
 button.icone svg { width: 20px; height: 20px; }
 button.retour { margin-bottom: 10px; }
-/* Boutons d'action : tampon plein, double filet intérieur, enfoncé dans le papier. */
+/* Gros boutons : tampon plein, cadre intérieur clair, posé un peu de travers. Aucun relief. */
 button.principal {
-  position: relative; padding: 18px; border-radius: 10px; background: var(--bouton); color: var(--sur-accent);
-  font: 900 20px 'Archivo', sans-serif; font-stretch: 75%; letter-spacing: .06em; text-transform: uppercase;
-  box-shadow: inset 0 0 0 4px var(--bouton), inset 0 0 0 5.5px var(--sur-accent), inset 0 3px 3px rgba(0, 0, 0, .4);
+  position: relative; padding: 18px; border-radius: 16px; background: var(--bouton); color: var(--sur-accent);
+  font: 900 19px 'Archivo', sans-serif; font-stretch: 75%; letter-spacing: .06em; text-transform: uppercase;
+  box-shadow: inset 0 0 0 4px var(--bouton), inset 0 0 0 6px var(--sur-accent); transform: rotate(-.6deg);
 }
+button.principal:active { transform: rotate(-.6deg) scale(.97); }
 button.principal.noir {
-  background: var(--texte); color: var(--carte);
-  box-shadow: inset 0 0 0 4px var(--texte), inset 0 0 0 5.5px var(--carte), inset 0 3px 3px rgba(0, 0, 0, .4);
+  background: var(--texte); color: var(--fond);
+  box-shadow: inset 0 0 0 4px var(--texte), inset 0 0 0 6px var(--fond);
 }
 
 /* Écran Tirage : tout doit tenir sur un écran de téléphone */
 #categories li, #reglages-menus li { padding: 4px 0; }
 #categories li.vide > span:first-child { color: var(--vide); }
-.compteur { display: flex; align-items: center; gap: 6px; }
+.compteur { display: flex; align-items: center; gap: 8px; }
 .compteur button {
-  width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1.5px solid var(--accent);
-  color: var(--accent); font: 16px/1 var(--mono); box-shadow: var(--enfonce);
+  width: 28px; height: 28px; padding: 0; border-radius: 50%; border: var(--anneau);
+  color: var(--accent); font: 14px/1 var(--mono);
 }
 .compteur output { min-width: 1.4em; text-align: center; font: 700 15px var(--mono); }
 /* Rangée des 7 chambres du Nagant : la balle avance d'un cran à chaque « clic ». */
 .chambres { position: relative; display: flex; gap: 5px; margin-top: 10px; width: max-content; }
-.chambres span { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--texte); box-shadow: inset 0 2px 2px var(--creux); }
-.chambres i { position: absolute; left: 0; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); animation: clic 4.2s steps(7, end) infinite; }
-@keyframes clic { to { transform: translateX(119px); } }
+.chambres span { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--texte); }
+.chambres i { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); animation: clic 4.2s steps(7, end) infinite; }
+@keyframes clic { to { transform: translateX(105px); } }
 
 .budget { display: flex; flex-direction: column; gap: 4px; }
 /* Montant dans un cachet à double filet : signale qu'un tap ouvre le clavier */
 .montant {
   align-self: flex-start; display: inline-flex; align-items: baseline; gap: 4px; margin-top: 4px; padding: 0 10px;
   border: 4px double var(--accent); border-radius: 6px; color: var(--accent);
-  font: 700 38px/1 var(--mono); transform: rotate(-2.5deg); box-shadow: var(--enfonce);
+  font: 700 34px/1 var(--mono); transform: rotate(-2deg);
 }
 .montant input {
   width: 3.2ch; font: inherit; color: inherit; background: none; border: none; padding: 0; margin: 0;
@@ -157,20 +152,24 @@ button.principal.noir {
 }
 .montant:focus-within { outline: 2px dashed var(--accent); outline-offset: 3px; }
 .montant span { font-size: 20px; }
-/* Curseur : une règle graduée, le repère rouge marque le budget. */
-input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 30px; margin: 2px 0; background: none; }
+/* Curseur : une double règle ; la partie rouge (--part, posé par app.js) va jusqu'à l'anneau tamponné. */
+input[type=range] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 30px; margin: 2px 0; background: none;
+  -webkit-mask: url(encre.webp) 0 0 / 256px; mask: url(encre.webp) 0 0 / 256px;
+}
 input[type=range]::-webkit-slider-runnable-track {
-  height: 16px;
-  background: linear-gradient(90deg, var(--texte) 0 1.5px, transparent 0) 0 0 / 12.5% 16px repeat-x,
-    linear-gradient(90deg, var(--texte) 0 1px, transparent 0) 0 0 / 2.5% 9px repeat-x;
+  height: 5px; border-top: 1px solid var(--texte); border-bottom: 1px solid var(--texte);
+  background: linear-gradient(90deg, var(--accent) var(--part, 50%), transparent 0);
 }
 input[type=range]::-moz-range-track {
-  height: 16px;
-  background: linear-gradient(90deg, var(--texte) 0 1.5px, transparent 0) 0 0 / 12.5% 16px repeat-x,
-    linear-gradient(90deg, var(--texte) 0 1px, transparent 0) 0 0 / 2.5% 9px repeat-x;
+  height: 3px; border-top: 1px solid var(--texte); border-bottom: 1px solid var(--texte);
+  background: linear-gradient(90deg, var(--accent) var(--part, 50%), transparent 0);
 }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 4px; height: 28px; margin-top: -2px; border-radius: 1px; background: var(--accent); }
-input[type=range]::-moz-range-thumb { width: 4px; height: 28px; border: none; border-radius: 1px; background: var(--accent); }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; margin-top: -10px; border-radius: 50%;
+  border: 3px double var(--accent); background: var(--fond);
+}
+input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; border: 3px double var(--accent); background: var(--fond); }
 input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-offset: 2px; }
 
 /* Maintenir pour tirer : la jauge se remplit comme une détente qu'on presse. */
@@ -181,143 +180,159 @@ input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-off
 }
 #lancer svg { width: 22px; height: 22px; flex: none; }
 #lancer .jauge {
-  position: absolute; left: 10px; right: 10px; bottom: 7px; height: 3px; background: var(--sur-accent); opacity: .85;
+  position: absolute; left: 12px; right: 12px; bottom: 9px; height: 3px; background: var(--sur-accent); opacity: .85;
   transform: scaleX(0); transform-origin: left;
 }
 #lancer.charge .jauge { transform: scaleX(1); transition: transform .9s cubic-bezier(.5, 0, .9, .6); }
-.aide { margin: -4px 0 0; text-align: center; font: 10.5px var(--mono); letter-spacing: .08em; color: var(--discret); }
+.aide { margin: -2px 0 0; text-align: center; font: 10.5px var(--mono); letter-spacing: .08em; color: var(--discret); }
 
-/* Écran Liste : un ticket de caisse, posé sur le papier. */
-#liste:not(:empty) {
-  position: relative; margin: 0 4px 10px; padding: 14px 18px 10px; background: var(--ticket);
-  border: 1px solid var(--bord); box-shadow: var(--pile-ombre); font-family: var(--mono);
+/* Tickets de caisse (menus et liste) : papier plus clair, machine à écrire, bord bas dentelé. */
+.ticket {
+  position: relative; margin: 4px 2px 0; padding: 12px 18px 24px; background: var(--ticket); font-family: var(--mono);
+  -webkit-mask: var(--dentelle); mask: var(--dentelle);
 }
-#liste:not(:empty)::after {
-  content: ''; position: absolute; left: -1px; right: -1px; bottom: -10px; height: 10px;
-  background: conic-gradient(from 135deg at 50% 0, var(--ticket) 90deg, transparent 0) 0 0 / 14px 100%;
+#ticket-menus { transform: rotate(.6deg); }
+#ticket-liste { transform: rotate(-.6deg); }
+.ticket:has(> #liste:empty) { display: none; }
+.ticket .totaux {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  margin-top: 10px; padding-top: 8px; border-top: var(--filet);
 }
-#liste:not(:empty)::before {
-  content: 'ВЕРНО'; position: absolute; right: 16px; top: -14px; padding: 2px 8px;
-  border: 2px solid var(--violet); color: var(--violet); font: 12px var(--mono); letter-spacing: .12em;
-  transform: rotate(6.5deg);
+.ticket .totaux .surtitre { color: var(--texte); font-size: 12px; letter-spacing: .04em; margin: 0; }
+#reste { color: var(--discret); text-transform: none; }
+#total-menus, #total { font: 700 18px/1 var(--mono); white-space: nowrap; }
+/* Le ticket de liste est visé « ВЕРНО » (le masque d'encre ne s'applique qu'au pseudo-élément : hors du ticket masqué). */
+#ticket-liste::before {
+  content: 'ВЕРНО'; position: absolute; right: 64px; top: 6px; z-index: 1; padding: 2px 8px; background: var(--ticket);
+  border: 2px solid var(--violet); color: var(--violet); font: 12px var(--mono); letter-spacing: .12em; transform: rotate(6.5deg);
 }
-#liste .carte { background: none; border: none; border-radius: 0; box-shadow: none; padding: 0; }
-#liste .carte + .carte { margin-top: 10px; }
+#liste .carte { border-top: none; padding-top: 0; }
+#liste .carte + .carte { margin-top: 10px; padding-top: 10px; border-top: 1.5px dashed var(--texte); }
+#liste .carte > .surtitre { color: var(--discret); }
+#liste .carte > .surtitre::before { content: '— '; }
 .article {
   display: flex; justify-content: space-between; gap: 8px;
-  padding: 7px 8px; margin: 0 -8px; border-bottom: 1px dashed var(--trait);
-  font: 14px var(--mono); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  padding: 3px 8px; margin: 0 -8px;
+  font: 13px var(--mono); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   touch-action: pan-y; cursor: pointer;
 }
-.article:last-child { border-bottom: none; }
-.article .poids { color: var(--discret); font-size: 13px; }
-.article .prix { white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
+.article .poids { color: var(--discret); font-size: 12px; }
+.article .prix { white-space: nowrap; font-variant-numeric: tabular-nums; cursor: pointer; }
 .article.coche { color: var(--vide); }
-.article.coche > span:first-child { text-decoration: line-through; text-decoration-color: var(--accent); }
-.article.coche .prix { font-weight: 400; }
+.article.coche > span:first-child, .article.coche .prix { text-decoration: line-through; text-decoration-color: var(--accent); }
 .retourne { animation: retourne .35s both; animation-delay: calc(var(--i) * 70ms); }
 @keyframes retourne { from { transform: rotateX(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Menus → liste : le ticket se retourne, les menus au recto, les courses au verso. */
+.pivote-sortie { animation: pivote-sortie .22s ease-in both; }
+.pivote-entree { animation: pivote-entree .3s cubic-bezier(.2, .8, .3, 1.15) both; }
+@keyframes pivote-sortie { to { transform: perspective(1100px) rotateY(90deg); } }
+@keyframes pivote-entree { from { transform: perspective(1100px) rotateY(-90deg); } }
 
 footer {
   position: sticky; bottom: 0; margin-top: auto;
-  background: url(grain.webp) 0 0 / 256px, var(--fond-bas);
-  display: flex; flex-direction: column; gap: 8px; padding: 8px 0 2px;
+  background: url(grain.webp) 0 0 / 256px, var(--fond);
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 0 2px;
 }
 #actions { display: flex; gap: 6px; }
 #actions button, #masques button {
-  flex: 1; padding: 9px 4px; border-radius: 8px; border: 1.5px solid var(--accent); color: var(--accent);
-  font: 12px var(--mono); text-transform: uppercase; letter-spacing: .04em; box-shadow: var(--enfonce);
+  flex: 1; padding: 8px 4px; border-radius: 999px; border: var(--anneau); color: var(--accent);
+  font: 11px var(--mono); text-transform: uppercase; letter-spacing: .06em;
 }
-.carte.totaux { display: flex; justify-content: space-between; align-items: flex-end; padding: 2px 4px; background: none; border: none; border-radius: 0; box-shadow: none; }
-.totaux .droite { text-align: right; }
-#total-menus, #total { font: 700 26px/1.1 var(--mono); color: var(--accent); }
-#total { font-size: 20px; }
-#reste { font: 13px var(--mono); color: var(--discret); }
 #nouveau, #retour-menus {
-  border: 1.5px solid var(--texte); border-radius: 10px; padding: 14px;
-  font: 800 15px 'Archivo', sans-serif; font-stretch: 80%; text-transform: uppercase; letter-spacing: .05em; box-shadow: var(--enfonce);
+  border: 1.5px solid var(--texte); border-radius: 16px; padding: 14px;
+  font: 800 15px 'Archivo', sans-serif; font-stretch: 80%; text-transform: uppercase; letter-spacing: .05em;
 }
 #nouveau.alerte { border-color: var(--accent); }
 
 /* Articles à racheter (Tirage et Liste) */
 form.ajout { display: flex; gap: 6px; margin: 4px 0 0; }
-form.carte.ajout { padding: 8px; }
+form.carte.ajout { border-top: none; padding-top: 0; }
 form.ajout input {
-  flex: 1; min-width: 0; font: 15px var(--mono); color: inherit; background: var(--pile);
-  border: none; border-radius: 8px; padding: 10px 12px; outline: none; box-shadow: inset 0 2px 3px var(--creux);
+  flex: 1; min-width: 0; font: 15px var(--mono); color: inherit; background: none;
+  border: none; border-bottom: 1.5px solid var(--texte); border-radius: 0; padding: 8px 2px; outline: none;
 }
 form.ajout input:focus { outline: 2px dashed var(--accent); outline-offset: 1px; }
 form.ajout button {
-  border: 1.5px solid var(--accent); border-radius: 8px; color: var(--accent); padding: 8px 12px;
-  font: 12px var(--mono); text-transform: uppercase; box-shadow: var(--enfonce);
+  border: var(--anneau); border-radius: 999px; color: var(--accent); padding: 7px 12px;
+  font: 11px var(--mono); text-transform: uppercase; letter-spacing: .06em;
 }
 .ajouts { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .ajouts:empty { display: none; }
-.ajouts li { display: flex; align-items: center; gap: 2px; border: 1px solid var(--bord); border-radius: 6px; padding: 2px 2px 2px 10px; font: 13px var(--mono); }
+.ajouts li { display: flex; align-items: center; gap: 2px; border: 1px solid var(--trait); border-radius: 999px; padding: 2px 2px 2px 10px; font: 13px var(--mono); }
 .ajouts button, .article .retirer { padding: 4px 8px; color: var(--discret); font-size: 13px; }
 #racheter .message { margin-top: 6px; }
 #depassement {
-  display: flex; flex-direction: column; gap: 8px; padding: 8px 12px; border: 4px double var(--accent); border-radius: 8px;
-  color: var(--accent); font: 13px var(--mono); box-shadow: var(--enfonce);
+  display: flex; flex-direction: column; gap: 8px; padding: 8px 12px; border: 4px double var(--accent); border-radius: 6px;
+  color: var(--accent); font: 13px var(--mono); transform: rotate(-1deg);
 }
 #depassement[hidden] { display: none; }
 #rentrer {
-  padding: 11px; border-radius: 6px; background: var(--bouton); color: var(--sur-accent);
-  font: 800 13px 'Archivo', sans-serif; text-transform: uppercase; letter-spacing: .05em; box-shadow: inset 0 3px 3px rgba(0, 0, 0, .4);
+  padding: 11px; border-radius: 12px; background: var(--bouton); color: var(--sur-accent);
+  font: 800 13px 'Archivo', sans-serif; text-transform: uppercase; letter-spacing: .05em;
+  box-shadow: inset 0 0 0 3px var(--bouton), inset 0 0 0 4.5px var(--sur-accent);
 }
 
-/* Écran Menus */
-#menus { flex: 1; display: flex; flex-direction: column; gap: 12px; }
-.menu h2 { margin: 0 0 4px; font: 700 13px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
-.menu .r { display: flex; gap: 8px; padding: 2px 0; }
-.menu .r > span:first-child { width: 84px; flex: none; padding-top: 3px; font: 10.5px var(--mono); text-transform: uppercase; color: var(--discret); }
-.menu .cotes { color: var(--discret); font-size: 14px; margin-top: 2px; }
-.menu.cible { outline: 2px dashed var(--accent); outline-offset: 2px; cursor: pointer; }
+/* Écran Menus : chaque menu est une ligne du ticket, séparée par un pointillé franc. */
+#menus { display: flex; flex-direction: column; }
+#menus .menu { padding: 10px 0; border-top: none; border-bottom: 1.5px dashed var(--texte); }
+#menus .menu:first-child { padding-top: 0; }
+#menus .menu:last-child { border-bottom: none; padding-bottom: 0; }
+.menu h2 { margin: 0 0 4px; font: 700 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.menu .r { display: flex; gap: 8px; padding: 1px 0; font-size: 13px; }
+.menu .r > span:first-child { width: 84px; flex: none; padding-top: 2px; font-size: 10.5px; text-transform: uppercase; color: var(--discret); }
+.menu .cotes { color: var(--discret); font-size: 13px; margin-top: 2px; }
+.menu.cible { outline: 1.5px solid var(--accent); outline-offset: 2px; border-radius: 8px; cursor: pointer; }
 .occ {
   border-radius: 3px; padding: 1px 4px; margin: -1px -4px; cursor: pointer;
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y;
 }
 .occ.choisi { background: var(--bouton); color: var(--sur-accent); }
 .manque { color: var(--accent); font-style: italic; }
-#alerte-menus { margin: 0; padding: 0 2px; color: var(--accent); font: 13px var(--mono); }
+#alerte-menus {
+  align-self: flex-start; margin: 0; padding: 6px 10px; border: 1.5px solid var(--violet); border-radius: 3px;
+  color: var(--violet); font: 12px var(--mono); transform: rotate(-1deg);
+}
 
 /* Écran Paramètres */
 .segment { display: flex; gap: 6px; margin-top: 8px; }
 .segment label {
-  flex: 1; text-align: center; padding: 7px 2px; border: 1.5px solid var(--trait); border-radius: 8px;
-  font: 13px var(--mono); color: var(--discret); cursor: pointer;
+  flex: 1; text-align: center; padding: 7px 2px; border: 1.5px solid var(--trait); border-radius: 999px;
+  font: 12px var(--mono); color: var(--discret); cursor: pointer;
 }
 .segment input { position: absolute; opacity: 0; pointer-events: none; }
-.segment label:has(input:checked) { padding: 4px 0; border: 4px double var(--accent); color: var(--accent); box-shadow: var(--enfonce); }
+.segment label:has(input:checked) { padding: 6px 0; border: var(--anneau); color: var(--accent); font-weight: 700; }
 .segment label:has(input:focus-visible) { outline: 2px dashed var(--accent); outline-offset: 2px; }
-#ecran-parametres .lignes { padding: 0; }
 input[role=switch] {
-  appearance: none; -webkit-appearance: none; width: 48px; height: 28px; border-radius: 999px; margin: 0;
-  border: 1.5px solid var(--texte); position: relative; cursor: pointer; box-shadow: var(--enfonce);
+  appearance: none; -webkit-appearance: none; width: 46px; height: 26px; border-radius: 999px; margin: 0;
+  border: 3px double var(--texte); position: relative; cursor: pointer;
 }
 input[role=switch]::after {
-  content: ""; position: absolute; top: 4px; left: 4px; width: 17px; height: 17px;
+  content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px;
   border-radius: 50%; background: var(--texte); transition: left .2s, background .2s;
 }
 input[role=switch]:checked { border-color: var(--accent); }
-input[role=switch]:checked::after { left: 24px; background: var(--accent); }
+input[role=switch]:checked::after { left: 23px; background: var(--accent); }
 #masques button { flex: none; padding: 6px 10px; }
 
-/* Barillet du Nagant : 7 chambres, dessiné à l'encre sur une feuille empilée */
+/* Barillet du Nagant : 7 chambres dessinées au trait, à l'encre */
 #roulette {
   position: fixed; inset: 0; display: grid; place-items: center;
-  background: color-mix(in srgb, var(--fond) 92%, transparent);
+  background: url(grain.webp) 0 0 / 256px, var(--fond);
 }
-.socle { filter: drop-shadow(6px 6px 0 var(--pile-bord)) drop-shadow(0 14px 14px var(--ombre)); }
-.barillet { display: block; width: 55vmin; max-width: 260px; fill: var(--texte); stroke: var(--texte); stroke-width: .8; }
-.barillet .corps { fill: var(--carte); stroke-width: 1.2; }
-.barillet ellipse { fill: var(--fond); } /* cannelures : encoches dans le bord */
-.barillet .balle { fill: var(--accent); }
+.socle { display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; }
+.socle .tampon { margin: 0; }
+.barillet { display: block; width: 60vmin; max-width: 240px; fill: none; stroke: var(--texte); stroke-width: 1.4; }
+.barillet .corps { stroke-width: 1.6; }
+.barillet ellipse { fill: var(--fond); }
+.barillet .balle { fill: var(--accent); stroke: none; }
+.barillet > circle:last-child { fill: var(--texte); }
 .barillet.tourne { animation: tourne var(--duree, 1.5s) cubic-bezier(.2, .7, .3, 1) both; }
 @keyframes tourne { from { transform: rotate(0); } to { transform: rotate(1140deg); } }
+.titre-roulette { margin: 0; font: 900 52px/.88 'Archivo', sans-serif; font-stretch: 70%; text-transform: uppercase; }
+.socle > .surtitre { color: var(--texte); }
 
 @media (prefers-reduced-motion: reduce) {
-  .barillet.tourne, .retourne { animation-duration: .01s; }
+  .barillet.tourne, .retourne, .pivote-sortie, .pivote-entree { animation-duration: .01s; }
   .chambres i { animation: none; }
   #lancer.charge .jauge { transition: none; }
 }

@@ -27,8 +27,8 @@
       </div>
       <button class="icone" data-ecran="parametres" aria-label="Paramètres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
     </header>
-    <ul id="reglages-menus" class="carte lignes"></ul>
-    <ul id="categories" class="carte lignes"></ul>
+    <div class="carte"><p class="surtitre">Tablée</p><ul id="reglages-menus" class="lignes"></ul></div>
+    <div class="carte"><p class="surtitre">Au tirage</p><ul id="categories" class="lignes"></ul></div>
     <div id="racheter" class="carte">
       <p class="surtitre">À racheter</p>
       <form class="ajout"><input name="ajout" list="suggestions" placeholder="Lait, huile…" autocomplete="off" aria-label="Article à racheter"><button>Ajouter</button></form>
@@ -56,7 +56,10 @@
       <button class="icone" data-ecran="parametres" aria-label="Paramètres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
     </header>
     <p id="alerte-menus" hidden></p>
-    <div id="menus"></div>
+    <div class="ticket" id="ticket-menus">
+      <div id="menus"></div>
+      <div class="totaux"><p class="surtitre">Total estimé</p><span id="total-menus"></span></div>
+    </div>
     <footer>
       <p class="message discret" hidden></p>
       <div id="actions" hidden>
@@ -64,9 +67,6 @@
         <button data-action="relancer">Relancer</button>
         <button data-action="reste">Relancer le reste</button>
         <button data-action="masquer">Masquer</button>
-      </div>
-      <div class="carte totaux">
-        <div><p class="surtitre">Total</p><span id="total-menus"></span></div>
       </div>
       <button id="voir-liste" class="principal noir">Voir la liste de courses</button>
     </footer>
@@ -84,14 +84,13 @@
       </span>
     </header>
     <form class="ajout carte"><input name="ajout" list="suggestions" placeholder="Ajouter un article…" autocomplete="off" aria-label="Article à ajouter"><button>Ajouter</button></form>
-    <div id="liste"></div>
+    <div class="ticket" id="ticket-liste">
+      <div id="liste"></div>
+      <div class="totaux"><p class="surtitre">Total<br><span id="reste"></span></p><span id="total"></span></div>
+    </div>
     <footer>
       <p class="message discret" hidden></p>
-      <div id="depassement" hidden><span></span><button id="rentrer">Relancer pour rentrer dans le budget</button></div>
-      <div class="carte totaux">
-        <div><p class="surtitre">Total</p><span id="total"></span></div>
-        <div class="droite"><p class="surtitre">Reste à acheter</p><span id="reste"></span></div>
-      </div>
+      <div id="depassement" hidden><span></span><button id="rentrer">Relancer sous le budget</button></div>
       <button id="retour-menus">← Menus</button>
       <button id="nouveau">Nouveau tirage</button>
     </footer>
@@ -139,12 +138,12 @@
   </section>
 
   <div id="roulette" hidden>
-    <div class="socle"><svg class="barillet" viewBox="-50 -50 100 100" aria-hidden="true">
+    <div class="socle"><p class="tampon">Секретно · № <span id="secret"></span></p><svg class="barillet" viewBox="-50 -50 100 100" aria-hidden="true">
       <circle r="47" class="corps"/>
       <ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(0.0)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(51.43)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(102.86)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(154.29)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(205.71)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(257.14)"/><ellipse cy="-44" rx="3.2" ry="4.5" transform="rotate(308.57)"/>
       <circle cy="-27" r="9.5" transform="rotate(0.0)"/><circle cy="-27" r="9.5" transform="rotate(51.43)"/><circle cy="-27" r="9.5" transform="rotate(102.86)"/><circle cy="-27" r="9.5" transform="rotate(154.29)"/><circle cy="-27" r="9.5" transform="rotate(205.71)"/><circle cy="-27" r="9.5" transform="rotate(257.14)"/><circle cy="-27" r="9.5" class="balle" transform="rotate(308.57)"/>
       <circle r="5.5"/>
-    </svg></div>
+    </svg><p class="titre-roulette">Ça <span class="rouge">tourne</span></p><p class="surtitre">1 chance sur 7</p></div>
   </div>
 
   <datalist id="suggestions"></datalist>
