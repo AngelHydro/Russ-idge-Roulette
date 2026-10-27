@@ -170,7 +170,8 @@ input[type=range]::-webkit-slider-thumb {
   border: 3px double var(--accent); background: var(--fond);
 }
 input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; border: 3px double var(--accent); background: var(--fond); }
-input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-offset: 2px; }
+/* Au clavier, l'encre est retirée : le contour de focus reste net. */
+input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-offset: 2px; -webkit-mask: none; mask: none; }
 
 /* Maintenir pour tirer : la jauge se remplit comme une détente qu'on presse. */
 /* Le bouton reste en bas de l'écran (pied de page collant, comme sur Menus et Liste). */
@@ -296,7 +297,7 @@ form.ajout button {
 /* Écran Paramètres */
 .segment { display: flex; gap: 6px; margin-top: 8px; }
 .segment label {
-  flex: 1; text-align: center; padding: 7px 2px; border: 1.5px solid var(--trait); border-radius: 999px;
+  flex: 1; text-align: center; padding: 7px 2px; border: 1.5px solid var(--vide); border-radius: 999px;
   font: 12px var(--mono); color: var(--discret); cursor: pointer;
 }
 .segment input { position: absolute; opacity: 0; pointer-events: none; }

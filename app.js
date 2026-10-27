@@ -538,17 +538,26 @@ $('#actions').addEventListener('click', (e) => {
 $('#voir-liste').addEventListener('click', () => { selection.clear(); deplacement = null; message(''); retourner('liste'); });
 
 // Menus ⇄ liste : le ticket pivote d'un quart de tour, l'écran change, le verso finit le tour.
+// Comme pour le barillet, un délai de secours : si l'animation ne se termine pas, on change d'écran quand même.
 function retourner(vers) {
   const depart = $(`#ticket-${vers === 'liste' ? 'menus' : 'liste'}`);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !depart.offsetParent) return afficher(vers);
+  let fait = false;
   const arrivee = () => {
+    if (fait) return;
+    fait = true;
+    depart.classList.remove('pivote-sortie');
     afficher(vers);
     const t = $(`#ticket-${vers}`);
+    if (!t.offsetParent) return; // ticket masqué (liste vide) : rien à animer
     t.classList.add('pivote-entree');
-    t.addEventListener('animationend', () => t.classList.remove('pivote-entree'), { once: true });
+    const fin = () => t.classList.remove('pivote-entree');
+    t.addEventListener('animationend', fin, { once: true });
+    setTimeout(fin, 500);
   };
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !depart.offsetParent) return afficher(vers);
   depart.classList.add('pivote-sortie');
-  depart.addEventListener('animationend', () => { depart.classList.remove('pivote-sortie'); arrivee(); }, { once: true });
+  depart.addEventListener('animationend', arrivee, { once: true });
+  setTimeout(arrivee, 400);
 }
 
 // Confirmation dans l'app (certains navigateurs intégrés bloquent confirm()) : 1er tap arme, 2e tap valide.
