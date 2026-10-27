@@ -251,6 +251,8 @@ input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-off
   content: 'ВЕРНО'; position: absolute; right: 64px; top: 6px; z-index: 1; padding: 2px 8px; background: var(--ticket);
   border: 2px solid var(--violet); color: var(--violet); font: 12px var(--mono); letter-spacing: .12em; transform: rotate(6.5deg);
 }
+/* Écran étroit : visa plus petit, dans l'angle libre entre le nom du premier rayon et le premier prix. */
+@media (max-width: 350px) { #ticket-liste::before { right: 20px; top: 5px; padding: 1px 5px; font-size: 10px; } }
 #liste .carte { border-top: none; padding-top: 0; }
 #liste .carte + .carte { margin-top: 10px; padding-top: 10px; border-top: 1.5px dashed var(--texte); }
 #liste .carte > .surtitre { color: var(--discret); }
