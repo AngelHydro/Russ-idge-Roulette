@@ -44,7 +44,7 @@
 }
 
 /* Encre de tampon : manques d'encre localisés ; « appuyé » = l'encre s'éclaircit vers un bord. */
-.tampon, h1 .rouge, .titre-roulette .rouge, button.principal, #rentrer, .icone, .montant, #depassement, .compteur button,
+.tampon, h1 .rouge, .titre-roulette .rouge, button.principal, #rentrer, .icone, .montant, .compteur button,
 #actions button, #masques button, .segment label:has(input:checked), input[role=switch], .barillet, #ticket-liste::before {
   -webkit-mask: url(encre.webp) 0 0 / 256px;
   mask: url(encre.webp) 0 0 / 256px;
@@ -132,7 +132,12 @@ button.principal.noir {
   width: 28px; height: 28px; padding: 0; border-radius: 50%; border: var(--anneau);
   color: var(--accent); font: 14px/1 var(--mono);
 }
-.compteur output { min-width: 1.4em; text-align: center; font: 700 15px var(--mono); }
+.compteur output { display: inline-block; min-width: 1.4em; text-align: center; font: 700 15px var(--mono); }
+.compteur output.roule-haut { animation: roule .28s cubic-bezier(.5, 1.6, .5, 1); --de: 70%; }
+.compteur output.roule-bas { animation: roule .28s cubic-bezier(.5, 1.6, .5, 1); --de: -70%; }
+@keyframes roule { from { transform: translateY(var(--de)); opacity: 0; } }
+.montant.reimprime { animation: reimprime .4s; }
+@keyframes reimprime { 30% { opacity: .15; transform: rotate(-2deg) scale(1.12); } 60% { opacity: 1; transform: rotate(-3.5deg) scale(.97); } }
 /* Rangée des 7 chambres du Nagant : la balle avance d'un cran à chaque « clic ». */
 .chambres { position: relative; display: flex; gap: 5px; margin-top: 10px; width: max-content; }
 .chambres span { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--texte); }
@@ -192,7 +197,18 @@ input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-off
   position: relative; margin: 4px 2px 0; padding: 12px 18px 24px; background: var(--ticket); font-family: var(--mono);
   -webkit-mask: var(--dentelle); mask: var(--dentelle);
 }
-#ticket-menus { transform: rotate(.6deg); }
+#ticket-menus { transform: rotate(.6deg); clip-path: inset(0); }
+#ticket-menus .cachet {
+  float: right; margin: -2px 0 6px 8px; padding: 3px 8px; border: 3px double var(--accent); color: var(--accent);
+  font: 12px var(--mono); letter-spacing: .1em; transform: rotate(-6deg);
+  -webkit-mask: url(encre.webp) 0 0 / 256px; mask: url(encre.webp) 0 0 / 256px;
+}
+#menus { clear: both; }
+/* Arrivée des menus : le ticket sort de la caisse par à-coups (la partie visible est celle déjà sortie de la fente). */
+.fente { height: 8px; margin: 0 0 -18px; border-radius: 5px; background: var(--texte); position: relative; z-index: 1; opacity: 0; transition: opacity .3s .2s; }
+#ecran-menus:has(#ticket-menus.imprime) .fente { opacity: 1; transition: none; }
+#ticket-menus.imprime { animation: imprime 1.5s steps(16, end) both; }
+@keyframes imprime { from { transform: translateY(-100%) rotate(.6deg); clip-path: inset(100% 0 0 0); } }
 #ticket-liste { transform: rotate(-.6deg); }
 .ticket:has(> #liste:empty) { display: none; }
 .ticket .totaux {
@@ -201,7 +217,14 @@ input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-off
 }
 .ticket .totaux .surtitre { color: var(--texte); font-size: 12px; letter-spacing: .04em; margin: 0; }
 #reste { color: var(--discret); text-transform: none; }
-#total-menus, #total { font: 700 18px/1 var(--mono); white-space: nowrap; }
+#total-menus, #total { font: 700 18px/1 var(--mono); white-space: nowrap; transition: color .3s; }
+#ligne-depassement {
+  display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; padding-top: 6px;
+  border-top: 1.5px dashed var(--accent); color: var(--accent); font-size: 12px; text-transform: uppercase; overflow: hidden;
+}
+#ligne-depassement b { font-size: 15px; }
+#ligne-depassement.imprime { animation: ligne-imprime .6s steps(4, end) both; }
+@keyframes ligne-imprime { from { max-height: 0; padding-top: 0; } to { max-height: 40px; } }
 /* Le ticket de liste est visé « ВЕРНО » (le masque d'encre ne s'applique qu'au pseudo-élément : hors du ticket masqué). */
 #ticket-liste::before {
   content: 'ВЕРНО'; position: absolute; right: 64px; top: 6px; z-index: 1; padding: 2px 8px; background: var(--ticket);
@@ -220,9 +243,16 @@ input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-off
 .article .poids { color: var(--discret); font-size: 12px; }
 .article .prix { white-space: nowrap; font-variant-numeric: tabular-nums; cursor: pointer; }
 .article.coche { color: var(--vide); }
-.article.coche > span:first-child, .article.coche .prix { text-decoration: line-through; text-decoration-color: var(--accent); }
-.retourne { animation: retourne .35s both; animation-delay: calc(var(--i) * 70ms); }
-@keyframes retourne { from { transform: rotateX(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.article { position: relative; transition: color .3s; }
+/* Coche : un trait rouge tracé de gauche à droite, comme un coup de stylo ; décocher l'efface à l'envers. */
+.article::after {
+  content: ''; position: absolute; left: 6px; right: 6px; top: 52%; height: 1.5px; border-radius: 1px; background: var(--accent);
+  transform: scaleX(0); transform-origin: left; pointer-events: none;
+}
+.article.coche::after { transform: scaleX(1); }
+.article.trace::after { animation: trace .35s cubic-bezier(.6, 0, .3, 1) both; }
+.article.efface::after { animation: trace .25s cubic-bezier(.6, 0, .3, 1) reverse both; }
+@keyframes trace { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 /* Menus → liste : le ticket se retourne, les menus au recto, les courses au verso. */
 .pivote-sortie { animation: pivote-sortie .22s ease-in both; }
 .pivote-entree { animation: pivote-entree .3s cubic-bezier(.2, .8, .3, 1.15) both; }
@@ -262,10 +292,7 @@ form.ajout button {
 .ajouts li { display: flex; align-items: center; gap: 2px; border: 1px solid var(--trait); border-radius: 999px; padding: 2px 2px 2px 10px; font: 13px var(--mono); }
 .ajouts button, .article .retirer { padding: 4px 8px; color: var(--discret); font-size: 13px; }
 #racheter .message { margin-top: 6px; }
-#depassement {
-  display: flex; flex-direction: column; gap: 8px; padding: 8px 12px; border: 4px double var(--accent); border-radius: 6px;
-  color: var(--accent); font: 13px var(--mono); transform: rotate(-1deg);
-}
+#depassement { display: flex; flex-direction: column; gap: 8px; color: var(--accent); font: 12px var(--mono); }
 #depassement[hidden] { display: none; }
 #rentrer {
   padding: 11px; border-radius: 12px; background: var(--bouton); color: var(--sur-accent);
@@ -288,6 +315,9 @@ form.ajout button {
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y;
 }
 .occ.choisi { background: var(--bouton); color: var(--sur-accent); }
+.occ.raye { background: none; color: var(--vide); text-decoration: line-through; text-decoration-color: var(--accent); }
+.occ.tape { display: inline-block; vertical-align: bottom; white-space: nowrap; overflow: hidden; animation: tape calc(var(--n) * 45ms + 100ms) steps(var(--n), end) both; }
+@keyframes tape { from { max-width: 0; } to { max-width: calc(var(--n) * 1ch + 8px); } }
 .manque { color: var(--accent); font-style: italic; }
 #alerte-menus {
   align-self: flex-start; margin: 0; padding: 6px 10px; border: 1.5px solid var(--violet); border-radius: 3px;
@@ -327,13 +357,22 @@ input[role=switch]:checked::after { left: 23px; background: var(--accent); }
 .barillet ellipse { fill: var(--fond); }
 .barillet .balle { fill: var(--accent); stroke: none; }
 .barillet > circle:last-child { fill: var(--texte); }
-.barillet.tourne { animation: tourne var(--duree, 1.5s) cubic-bezier(.2, .7, .3, 1) both; }
-@keyframes tourne { from { transform: rotate(0); } to { transform: rotate(1140deg); } }
+/* Roue libre : un seul lancer qui ralentit, dépasse d'un rien, revient et se cale chambre rouge sous le repère
+   (la balle est dessinée à -51,43° : 4 tours + un septième de tour la ramènent en haut). */
+.barillet.tourne { animation: tourne var(--duree, 1.5s) both; }
+@keyframes tourne {
+  0% { transform: rotate(0); animation-timing-function: cubic-bezier(.15, .6, .25, 1); }
+  84% { transform: rotate(1497deg); animation-timing-function: ease-in-out; }
+  93% { transform: rotate(1488deg); }
+  100% { transform: rotate(1491.43deg); }
+}
+.repere { width: 0; height: 0; margin-bottom: -14px; border: 9px solid transparent; border-top: 13px solid var(--texte); border-bottom: 0; position: relative; z-index: 1; }
 .titre-roulette { margin: 0; font: 900 52px/.88 'Archivo', sans-serif; font-stretch: 70%; text-transform: uppercase; }
 .socle > .surtitre { color: var(--texte); }
 
 @media (prefers-reduced-motion: reduce) {
-  .barillet.tourne, .retourne, .pivote-sortie, .pivote-entree { animation-duration: .01s; }
+  .barillet.tourne, .pivote-sortie, .pivote-entree, #ticket-menus.imprime, #ligne-depassement.imprime,
+  .article.trace::after, .article.efface::after, .compteur output, .montant.reimprime, .occ.tape { animation-duration: .01s; }
   .chambres i { animation: none; }
   #lancer.charge .jauge { transition: none; }
 }

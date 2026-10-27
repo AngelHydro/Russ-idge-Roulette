@@ -109,6 +109,15 @@ function afficher(nom, { historique = true } = {}) {
 // Redessine l'écran en cours sans changer la position dans la page.
 const rendre = () => ({ tirage: rendreTirage, menus: rendreMenus, liste: rendreListe, parametres: rendreParametres })[ecranCourant]();
 
+// Rejoue une animation CSS portée par `classe` (retirée une fois finie, pour pouvoir la relancer).
+function animer(el, classe) {
+  if (!el) return;
+  el.classList.remove(classe);
+  void el.offsetWidth;
+  el.classList.add(classe);
+  el.addEventListener('animationend', () => el.classList.remove(classe), { once: true });
+}
+
 // ---------- Écran Tirage ----------
 
 const REGLAGES = { nbMenus: ['Menus', 1, 14], personnes: ['Personnes', 1, 8] };
@@ -190,9 +199,11 @@ $('#reglages-menus').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-reglage]');
   if (!b) return;
   const [, mini, maxi] = REGLAGES[b.dataset.reglage];
-  etat[b.dataset.reglage] = Math.max(mini, Math.min(maxi, etat[b.dataset.reglage] + Number(b.dataset.delta)));
+  const avant = etat[b.dataset.reglage];
+  etat[b.dataset.reglage] = Math.max(mini, Math.min(maxi, avant + Number(b.dataset.delta)));
   sauver();
   rendreTirage();
+  if (etat[b.dataset.reglage] !== avant) rouler(`[data-reglage="${b.dataset.reglage}"]`, b.dataset.delta);
 });
 
 $('#categories').addEventListener('click', (e) => {
@@ -200,16 +211,26 @@ $('#categories').addEventListener('click', (e) => {
   if (!b) return;
   const p = pool();
   const c = b.dataset.cat;
-  etat.counts[c] = Math.max(0, Math.min(p[c].length, countsEffectifs(p)[c] + Number(b.dataset.delta)));
+  const avant = countsEffectifs(p)[c];
+  etat.counts[c] = Math.max(0, Math.min(p[c].length, avant + Number(b.dataset.delta)));
   sauver();
   rendreTirage();
+  if (etat.counts[c] !== avant) rouler(`[data-cat="${CSS.escape(c)}"]`, b.dataset.delta);
 });
+
+
+// Le chiffre d'un compteur roule dans le sens du geste (le compteur vient d'être redessiné).
+function rouler(selecteur, delta) {
+  animer(document.querySelector(selecteur)?.parentElement.querySelector('output'), delta > 0 ? 'roule-haut' : 'roule-bas');
+}
 
 $('#budget-curseur').addEventListener('input', (e) => {
   etat.budget = Number(e.target.value) * 100;
   sauver();
   rendreTirage();
 });
+// Le cachet du budget est réimprimé quand on lâche le curseur (ou valide la saisie).
+$('#budget-curseur').addEventListener('change', () => animer($('.montant'), 'reimprime'));
 
 // Le champ du budget prend la largeur de son contenu, même pendant la saisie.
 function ajusterChamp() {
@@ -224,6 +245,7 @@ $('#budget-valeur').addEventListener('change', (e) => {
   sauver();
   e.target.blur();
   rendreTirage();
+  animer($('.montant'), 'reimprime');
 });
 
 // Tirage complet avec les réglages en cours. `remplace` : on refait le dernier tirage (il ne compte pas en plus dans
@@ -252,7 +274,7 @@ function lancerTirage({ remplace = false } = {}) {
   selection.clear();
   sauver();
   message('');
-  roulette(1500, () => { afficher('menus'); rendreMenus(true); });
+  roulette(1500, () => { afficher('menus'); rendreMenus({ imprime: true }); });
   return true;
 }
 // Maintenir pour tirer : le geste laisse un temps d'hésitation. Repli : deux taps rapprochés, ou Entrée / lecteur
@@ -330,9 +352,9 @@ function roulette(duree, fin) {
   r.hidden = false;
   void b.getBoundingClientRect(); // relance l'animation CSS
   b.classList.add('tourne');
-  b.addEventListener('animationend', terminer, { once: true });
+  b.addEventListener('animationend', () => setTimeout(terminer, 250), { once: true }); // on voit le barillet calé
   r.addEventListener('click', terminer, { once: true });
-  setTimeout(terminer, duree + 300); // si le navigateur ralentit l'animation, on ne reste pas bloqué
+  setTimeout(terminer, duree + 550); // si le navigateur ralentit l'animation, on ne reste pas bloqué
 }
 
 // ---------- Écran Liste ----------
@@ -347,7 +369,7 @@ function nbPaquets() {
 const qteArticle = (i, p) => (p > 1 ? `${p}\u00a0×\u00a0${quantite(i)}` : quantite(i));
 const prixArticles = (lignes, pq) => somme(lignes.map((l) => pq(l.nom) * parNom.get(l.nom).prix));
 
-function rendreListe(anim = false) {
+function rendreListe() {
   const lignes = articles();
   const pq = nbPaquets();
   const groupes = new Map();
@@ -356,14 +378,13 @@ function rendreListe(anim = false) {
     if (!groupes.has(r)) groupes.set(r, []);
     groupes.get(r).push(l);
   }
-  let n = 0;
   $('#liste').innerHTML = [...groupes.keys()].sort((a, b) => rang(a) - rang(b)).map((r) =>
     `<div class="carte"><p class="surtitre">${esc(r)}</p>` + groupes.get(r).sort((a, b) => a.coche - b.coche).map((l) => {
       const i = parNom.get(l.nom);
-      const classes = ['article', l.coche && 'coche', anim && 'retourne'].filter(Boolean).join(' ');
+      const classes = ['article', l.coche && 'coche'].filter(Boolean).join(' ');
       const retirer = etat.ajouts.includes(l.nom) && !pq.menus.has(l.nom)
         ? ` <button class="retirer" data-retirer="${esc(l.nom)}" aria-label="Retirer ${esc(l.nom)}">✕</button>` : '';
-      return `<div class="${classes}" data-nom="${esc(l.nom)}" style="--i:${n++}">
+      return `<div class="${classes}" data-nom="${esc(l.nom)}">
         <span>${esc(i.nom)} <span class="poids">·&nbsp;${qteArticle(i, pq(l.nom))}</span>${retirer}</span>
         <span class="prix">${etat.prix === 'kilo' ? prixAffiche(i) : euros(pq(l.nom) * i.prix)}</span></div>`;
     }).join('') + '</div>',
@@ -375,6 +396,11 @@ function rendreListe(anim = false) {
   $('#retour-menus').hidden = !etat.menus;
   // Un ajout fait après le tirage peut dépasser le budget : on le dit, et on propose de refaire le tirage.
   const depasse = totalListe - etat.budget;
+  const ligne = $('#ligne-depassement');
+  if (depasse > 0 && ligne.hidden) animer(ligne, 'imprime'); // la caisse imprime la ligne quand le budget saute
+  ligne.hidden = depasse <= 0;
+  $('#ligne-depassement b').textContent = `+${euros(depasse)}`;
+  $('#total').classList.toggle('alerte', depasse > 0);
   $('#depassement').hidden = depasse <= 0;
   const relancable = etat.menus && minimumTirage() <= etat.budget;
   $('#depassement span').textContent = `${euros(depasse)} au-dessus du budget`
@@ -427,6 +453,8 @@ surAppui($('#liste'), '.article', {
     l.coche = !l.coche;
     sauver();
     rendreListe();
+    // L'article a pu changer de place (cochés en bas) : on le retrouve pour tracer ou effacer le trait.
+    animer($(`#liste .article[data-nom="${CSS.escape(l.nom)}"]`), l.coche ? 'trace' : 'efface');
   },
 });
 
@@ -441,14 +469,16 @@ const LIBELLES = { proteine: 'Protéine', legume: 'Légume' };
 const libelle = (r, m) => LIBELLES[r]
   || (m.feculent.length && m.feculent.every((n) => parNom.get(n)?.categorie === 'Légumineuses') ? 'Légumineuse' : 'Féculent');
 
-function rendreMenus(anim = false) {
+// `imprime` : le ticket sort de la caisse (arrivée d'un tirage) ; `tapes` : noms à taper à la machine (remplaçants).
+function rendreMenus({ imprime = false, tapes = new Set() } = {}) {
   const menus = etat.menus || [];
-  const occ = (k, r, nom) => `<span class="occ${selection.has(cleOcc(k, r, nom)) ? ' choisi' : ''}"
-    data-menu="${k}" data-role="${r}" data-nom="${esc(nom)}">${esc(nom)}</span>`;
+  const occ = (k, r, nom) => `<span class="occ${selection.has(cleOcc(k, r, nom)) ? ' choisi' : ''}${tapes.has(nom) ? ' tape' : ''}"
+    style="--n:${nom.length}" data-menu="${k}" data-role="${r}" data-nom="${esc(nom)}">${esc(nom)}</span>`;
+  $('#cachet-semaine').textContent = semaine();
   $('#menus-surtitre').textContent = `${menus.length} menu${menus.length > 1 ? 's' : ''} · ${etat.personnes} personne${etat.personnes > 1 ? 's' : ''}`;
   $('#menus').innerHTML = menus.map((m, k) => {
     const cible = deplacement && deplacement.menu !== k ? ' cible' : '';
-    return `<div class="carte menu${cible}${anim ? ' retourne' : ''}" data-menu="${k}" style="--i:${k}">
+    return `<div class="carte menu${cible}" data-menu="${k}">
       <h2>Menu ${k + 1}</h2>
       ${ROLES_MENU.map((r) => `<div class="r"><span>${libelle(r, m)}</span><span>${
         m[r].length ? m[r].map((n) => occ(k, r, n)).join(', ') : '<span class="manque">manquant</span>'}</span></div>`).join('')}
@@ -461,6 +491,7 @@ function rendreMenus(anim = false) {
 
   $('#total-menus').textContent = `${euros(totalCourses())} / ${euros(etat.budget)}`;
   $('#actions').hidden = selection.size === 0 || !!deplacement;
+  if (imprime) animer($('#ticket-menus'), 'imprime');
 }
 
 function basculerOccurrence(el) {
@@ -509,7 +540,16 @@ $('#actions').addEventListener('click', (e) => {
     return message('Touche le menu où le mettre');
   }
 
-  // Relancer / Relancer le reste / Masquer : les remplaçants prennent la place des anciens, dans les mêmes menus.
+  // Relancer / Relancer le reste / Masquer : les ingrédients visés sont barrés à l'encre, puis les remplaçants
+  // prennent leur place, dans les mêmes menus, tapés à la machine.
+  const vises = action === 'reste' ? '.occ:not(.choisi)' : '.occ.choisi';
+  document.querySelectorAll(`#menus ${vises}`).forEach((el) => el.classList.add('raye'));
+  $('#actions').hidden = true;
+  selection.clear(); // `choisis` est déjà pris : un tap pendant le barré ne peut plus relancer une seconde fois
+  setTimeout(() => appliquer(action, choisis), matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350);
+});
+
+function appliquer(action, choisis) {
   const nomsChoisis = new Set(choisis.map((c) => c.nom));
   const noms = [...achats(etat.menus, parNom, etat.personnes).keys()];
   const items = noms.map((n) => ({ ...parNom.get(n), prix: paquets(parNom.get(n), 1, etat.personnes) * parNom.get(n).prix }));
@@ -529,11 +569,10 @@ $('#actions').addEventListener('click', (e) => {
   majListe();
   selection.clear();
   sauver();
-  if (remplaces.length) roulette(400, rendreMenus);
-  else rendreMenus();
+  rendreMenus({ tapes: new Set(remplaces.map((i) => nouveaux[i].nom)) });
   const n = echecs.length;
   message(!n ? '' : `${n} ingrédient${n > 1 ? 's' : ''} sans remplaçant dans le budget${action === 'masquer' ? ' (masqué' + (n > 1 ? 's' : '') + ' quand même)' : ''}`);
-});
+}
 
 $('#voir-liste').addEventListener('click', () => { selection.clear(); deplacement = null; message(''); retourner('liste'); });
 
