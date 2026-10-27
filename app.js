@@ -102,6 +102,8 @@ function prixAffiche(i) {
 function afficher(nom, { historique = true } = {}) {
   if (historique && nom !== ecranCourant) history.pushState({ ecran: nom }, '');
   ecranCourant = nom;
+  // Une impression interrompue (écran quitté) ne doit pas rejouer au retour.
+  for (const el of document.querySelectorAll('.imprime')) el.classList.remove('imprime');
   for (const e of ['tirage', 'menus', 'liste', 'parametres']) $(`#ecran-${e}`).hidden = e !== nom;
   rendre();
   window.scrollTo(0, 0);
@@ -109,13 +111,23 @@ function afficher(nom, { historique = true } = {}) {
 // Redessine l'écran en cours sans changer la position dans la page.
 const rendre = () => ({ tirage: rendreTirage, menus: rendreMenus, liste: rendreListe, parametres: rendreParametres })[ecranCourant]();
 
+// Appelle `f` à la fin d'une animation de `el` lui-même (celles de ses enfants remontent aussi jusqu'à lui).
+function auBout(el, f) {
+  const h = (e) => {
+    if (e.target !== el) return;
+    el.removeEventListener('animationend', h);
+    f();
+  };
+  el.addEventListener('animationend', h);
+}
+
 // Rejoue une animation CSS portée par `classe` (retirée une fois finie, pour pouvoir la relancer).
 function animer(el, classe) {
   if (!el) return;
   el.classList.remove(classe);
   void el.offsetWidth;
   el.classList.add(classe);
-  el.addEventListener('animationend', () => el.classList.remove(classe), { once: true });
+  auBout(el, () => el.classList.remove(classe));
 }
 
 // ---------- Écran Tirage ----------
@@ -469,10 +481,10 @@ const LIBELLES = { proteine: 'Protéine', legume: 'Légume' };
 const libelle = (r, m) => LIBELLES[r]
   || (m.feculent.length && m.feculent.every((n) => parNom.get(n)?.categorie === 'Légumineuses') ? 'Légumineuse' : 'Féculent');
 
-// `imprime` : le ticket sort de la caisse (arrivée d'un tirage) ; `tapes` : noms à taper à la machine (remplaçants).
+// `imprime` : le ticket sort de la caisse (arrivée d'un tirage) ; `tapes` : occurrences (cleOcc) à taper à la machine.
 function rendreMenus({ imprime = false, tapes = new Set() } = {}) {
   const menus = etat.menus || [];
-  const occ = (k, r, nom) => `<span class="occ${selection.has(cleOcc(k, r, nom)) ? ' choisi' : ''}${tapes.has(nom) ? ' tape' : ''}"
+  const occ = (k, r, nom) => `<span class="occ${selection.has(cleOcc(k, r, nom)) ? ' choisi' : ''}${tapes.has(cleOcc(k, r, nom)) ? ' tape' : ''}"
     style="--n:${nom.length}" data-menu="${k}" data-role="${r}" data-nom="${esc(nom)}">${esc(nom)}</span>`;
   $('#cachet-semaine').textContent = semaine();
   $('#menus-surtitre').textContent = `${menus.length} menu${menus.length > 1 ? 's' : ''} · ${etat.personnes} personne${etat.personnes > 1 ? 's' : ''}`;
@@ -495,7 +507,7 @@ function rendreMenus({ imprime = false, tapes = new Set() } = {}) {
 }
 
 // Une fois tapé, le nom peut de nouveau passer à la ligne (sinon un nom long est coupé sur un petit écran).
-$('#menus').addEventListener('animationend', (e) => e.target.classList.remove('tape'));
+$('#menus').addEventListener('animationend', (e) => e.animationName === 'tape' && e.target.classList.remove('tape'));
 
 function basculerOccurrence(el) {
   const c = cleOcc(el.dataset.menu, el.dataset.role, el.dataset.nom);
@@ -566,13 +578,17 @@ function appliquer(action, choisis) {
   const garder = (ns) => ns.filter((n) => !retires.has(n));
   const menus = substituer(etat.menus, new Map(remplaces.map((i) => [noms[i], nouveaux[i].nom])), parNom)
     .map((m) => ({ proteine: garder(m.proteine), feculent: garder(m.feculent), legume: garder(m.legume), cotes: garder(m.cotes) }));
+  const avant = etat.menus;
   etat.menus = completer(menus, parNom, etat.personnes, budgetTirage());
+  // Seules les occurrences nouvelles dans leur menu sont tapées (pas un même nom déjà présent ailleurs).
+  const tapes = new Set(etat.menus.flatMap((m, k) => [...ROLES_MENU, 'cotes'].flatMap((r) =>
+    m[r].filter((n) => !avant[k]?.[r].includes(n)).map((n) => cleOcc(k, r, n)))));
   // Un article remplacé est un nouvel article : il repart décoché.
   etat.liste = (etat.liste || []).filter((l) => !remplaces.some((i) => noms[i] === l.nom));
   majListe();
   selection.clear();
   sauver();
-  rendreMenus({ tapes: new Set(remplaces.map((i) => nouveaux[i].nom)) });
+  rendreMenus({ tapes });
   const n = echecs.length;
   message(!n ? '' : `${n} ingrédient${n > 1 ? 's' : ''} sans remplaçant dans le budget${action === 'masquer' ? ' (masqué' + (n > 1 ? 's' : '') + ' quand même)' : ''}`);
 }
@@ -586,11 +602,9 @@ function retourner(vers) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || !depart.offsetParent) return afficher(vers);
   let fait = false;
   const ecran = ecranCourant;
-  // Une animation d'un enfant (nom tapé à la machine) remonte aussi ici : seule celle du ticket compte.
-  const arrivee = (e) => {
-    if (fait || (e && e.target !== depart)) return;
+  const arrivee = () => {
+    if (fait) return;
     fait = true;
-    depart.removeEventListener('animationend', arrivee);
     depart.classList.remove('pivote-sortie');
     if (ecranCourant !== ecran) return; // retour système pendant le pivot : on reste où il a mené
     afficher(vers);
@@ -598,11 +612,14 @@ function retourner(vers) {
     if (!t.offsetParent) return; // ticket masqué (liste vide) : rien à animer
     t.classList.add('pivote-entree');
     const fin = () => t.classList.remove('pivote-entree');
-    t.addEventListener('animationend', fin, { once: true });
+    auBout(t, fin);
     setTimeout(fin, 500);
   };
+  // Une impression ou une entrée encore en cours l'emporterait sur la sortie : on les arrête net.
+  depart.classList.remove('imprime', 'pivote-entree');
+  void depart.offsetWidth;
   depart.classList.add('pivote-sortie');
-  depart.addEventListener('animationend', arrivee);
+  auBout(depart, arrivee);
   setTimeout(arrivee, 400);
 }
 
