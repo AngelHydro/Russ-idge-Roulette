@@ -134,7 +134,9 @@ function rendreTirage() {
   const champ = $('#budget-valeur');
   if (document.activeElement !== champ) champ.value = String(etat.budget / 100).replace('.', ',');
   ajusterChamp();
-  $('#budget-curseur').value = Math.round(etat.budget / 100);
+  const curseur = $('#budget-curseur');
+  curseur.value = Math.round(etat.budget / 100);
+  curseur.style.setProperty('--part', `${(curseur.value / curseur.max) * 100}%`);
 
   $('#racheter .ajouts').innerHTML = etat.ajouts.map((n) =>
     `<li><span>${esc(n)}</span><button data-retirer="${esc(n)}" aria-label="Retirer ${esc(n)}">✕</button></li>`).join('');
@@ -322,6 +324,7 @@ function roulette(duree, fin) {
     clic();
     fin();
   };
+  $('#secret').textContent = String(semaine()).padStart(3, '0');
   b.style.setProperty('--duree', `${duree}ms`);
   b.classList.remove('tourne');
   r.hidden = false;
@@ -427,7 +430,7 @@ surAppui($('#liste'), '.article', {
   },
 });
 
-$('#retour-menus').addEventListener('click', () => afficher('menus'));
+$('#retour-menus').addEventListener('click', () => retourner('menus'));
 
 // ---------- Écran Menus ----------
 
@@ -532,7 +535,30 @@ $('#actions').addEventListener('click', (e) => {
   message(!n ? '' : `${n} ingrédient${n > 1 ? 's' : ''} sans remplaçant dans le budget${action === 'masquer' ? ' (masqué' + (n > 1 ? 's' : '') + ' quand même)' : ''}`);
 });
 
-$('#voir-liste').addEventListener('click', () => { selection.clear(); deplacement = null; message(''); afficher('liste'); });
+$('#voir-liste').addEventListener('click', () => { selection.clear(); deplacement = null; message(''); retourner('liste'); });
+
+// Menus ⇄ liste : le ticket pivote d'un quart de tour, l'écran change, le verso finit le tour.
+// Comme pour le barillet, un délai de secours : si l'animation ne se termine pas, on change d'écran quand même.
+function retourner(vers) {
+  const depart = $(`#ticket-${vers === 'liste' ? 'menus' : 'liste'}`);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !depart.offsetParent) return afficher(vers);
+  let fait = false;
+  const arrivee = () => {
+    if (fait) return;
+    fait = true;
+    depart.classList.remove('pivote-sortie');
+    afficher(vers);
+    const t = $(`#ticket-${vers}`);
+    if (!t.offsetParent) return; // ticket masqué (liste vide) : rien à animer
+    t.classList.add('pivote-entree');
+    const fin = () => t.classList.remove('pivote-entree');
+    t.addEventListener('animationend', fin, { once: true });
+    setTimeout(fin, 500);
+  };
+  depart.classList.add('pivote-sortie');
+  depart.addEventListener('animationend', arrivee, { once: true });
+  setTimeout(arrivee, 400);
+}
 
 // Confirmation dans l'app (certains navigateurs intégrés bloquent confirm()) : 1er tap arme, 2e tap valide.
 let armeNouveau = null;
