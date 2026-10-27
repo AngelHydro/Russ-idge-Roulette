@@ -253,8 +253,6 @@ input[type=range]:focus-visible { outline: 2px dashed var(--accent); outline-off
 .article.trace::after { animation: trace .35s cubic-bezier(.6, 0, .3, 1) both; }
 .article.efface::after { animation: trace .25s cubic-bezier(.6, 0, .3, 1) reverse both; }
 @keyframes trace { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.retourne { animation: retourne .35s both; animation-delay: calc(var(--i) * 70ms); }
-@keyframes retourne { from { transform: rotateX(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
 /* Menus → liste : le ticket se retourne, les menus au recto, les courses au verso. */
 .pivote-sortie { animation: pivote-sortie .22s ease-in both; }
 .pivote-entree { animation: pivote-entree .3s cubic-bezier(.2, .8, .3, 1.15) both; }
@@ -373,7 +371,7 @@ input[role=switch]:checked::after { left: 23px; background: var(--accent); }
 .socle > .surtitre { color: var(--texte); }
 
 @media (prefers-reduced-motion: reduce) {
-  .barillet.tourne, .retourne, .pivote-sortie, .pivote-entree, #ticket-menus.imprime, #ligne-depassement.imprime,
+  .barillet.tourne, .pivote-sortie, .pivote-entree, #ticket-menus.imprime, #ligne-depassement.imprime,
   .article.trace::after, .article.efface::after, .compteur output, .montant.reimprime, .occ.tape { animation-duration: .01s; }
   .chambres i { animation: none; }
   #lancer.charge .jauge { transition: none; }

@@ -352,9 +352,9 @@ function roulette(duree, fin) {
   r.hidden = false;
   void b.getBoundingClientRect(); // relance l'animation CSS
   b.classList.add('tourne');
-  b.addEventListener('animationend', terminer, { once: true });
+  b.addEventListener('animationend', () => setTimeout(terminer, 250), { once: true }); // on voit le barillet calé
   r.addEventListener('click', terminer, { once: true });
-  setTimeout(terminer, duree + 300); // si le navigateur ralentit l'animation, on ne reste pas bloqué
+  setTimeout(terminer, duree + 550); // si le navigateur ralentit l'animation, on ne reste pas bloqué
 }
 
 // ---------- Écran Liste ----------
@@ -369,7 +369,7 @@ function nbPaquets() {
 const qteArticle = (i, p) => (p > 1 ? `${p}\u00a0×\u00a0${quantite(i)}` : quantite(i));
 const prixArticles = (lignes, pq) => somme(lignes.map((l) => pq(l.nom) * parNom.get(l.nom).prix));
 
-function rendreListe(anim = false) {
+function rendreListe() {
   const lignes = articles();
   const pq = nbPaquets();
   const groupes = new Map();
@@ -378,14 +378,13 @@ function rendreListe(anim = false) {
     if (!groupes.has(r)) groupes.set(r, []);
     groupes.get(r).push(l);
   }
-  let n = 0;
   $('#liste').innerHTML = [...groupes.keys()].sort((a, b) => rang(a) - rang(b)).map((r) =>
     `<div class="carte"><p class="surtitre">${esc(r)}</p>` + groupes.get(r).sort((a, b) => a.coche - b.coche).map((l) => {
       const i = parNom.get(l.nom);
-      const classes = ['article', l.coche && 'coche', anim && 'retourne'].filter(Boolean).join(' ');
+      const classes = ['article', l.coche && 'coche'].filter(Boolean).join(' ');
       const retirer = etat.ajouts.includes(l.nom) && !pq.menus.has(l.nom)
         ? ` <button class="retirer" data-retirer="${esc(l.nom)}" aria-label="Retirer ${esc(l.nom)}">✕</button>` : '';
-      return `<div class="${classes}" data-nom="${esc(l.nom)}" style="--i:${n++}">
+      return `<div class="${classes}" data-nom="${esc(l.nom)}">
         <span>${esc(i.nom)} <span class="poids">·&nbsp;${qteArticle(i, pq(l.nom))}</span>${retirer}</span>
         <span class="prix">${etat.prix === 'kilo' ? prixAffiche(i) : euros(pq(l.nom) * i.prix)}</span></div>`;
     }).join('') + '</div>',
@@ -546,6 +545,7 @@ $('#actions').addEventListener('click', (e) => {
   const vises = action === 'reste' ? '.occ:not(.choisi)' : '.occ.choisi';
   document.querySelectorAll(`#menus ${vises}`).forEach((el) => el.classList.add('raye'));
   $('#actions').hidden = true;
+  selection.clear(); // `choisis` est déjà pris : un tap pendant le barré ne peut plus relancer une seconde fois
   setTimeout(() => appliquer(action, choisis), matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350);
 });
 
