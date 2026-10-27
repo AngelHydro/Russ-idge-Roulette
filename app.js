@@ -494,6 +494,9 @@ function rendreMenus({ imprime = false, tapes = new Set() } = {}) {
   if (imprime) animer($('#ticket-menus'), 'imprime');
 }
 
+// Une fois tapé, le nom peut de nouveau passer à la ligne (sinon un nom long est coupé sur un petit écran).
+$('#menus').addEventListener('animationend', (e) => e.target.classList.remove('tape'));
+
 function basculerOccurrence(el) {
   const c = cleOcc(el.dataset.menu, el.dataset.role, el.dataset.nom);
   selection.has(c) ? selection.delete(c) : selection.add(c);
@@ -582,10 +585,14 @@ function retourner(vers) {
   const depart = $(`#ticket-${vers === 'liste' ? 'menus' : 'liste'}`);
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || !depart.offsetParent) return afficher(vers);
   let fait = false;
-  const arrivee = () => {
-    if (fait) return;
+  const ecran = ecranCourant;
+  // Une animation d'un enfant (nom tapé à la machine) remonte aussi ici : seule celle du ticket compte.
+  const arrivee = (e) => {
+    if (fait || (e && e.target !== depart)) return;
     fait = true;
+    depart.removeEventListener('animationend', arrivee);
     depart.classList.remove('pivote-sortie');
+    if (ecranCourant !== ecran) return; // retour système pendant le pivot : on reste où il a mené
     afficher(vers);
     const t = $(`#ticket-${vers}`);
     if (!t.offsetParent) return; // ticket masqué (liste vide) : rien à animer
@@ -595,7 +602,7 @@ function retourner(vers) {
     setTimeout(fin, 500);
   };
   depart.classList.add('pivote-sortie');
-  depart.addEventListener('animationend', arrivee, { once: true });
+  depart.addEventListener('animationend', arrivee);
   setTimeout(arrivee, 400);
 }
 
