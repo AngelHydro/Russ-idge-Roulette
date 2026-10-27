@@ -264,7 +264,7 @@ function lancerTirage({ remplace = false } = {}) {
     if (items && ecranCourant !== 'tirage') message('Aucun ingrédient à tirer');
     else if (!items && ecranCourant === 'tirage') { $('#minimum').textContent = texte; $('#minimum').classList.add('alerte'); }
     else if (!items) message(texte);
-    if (ecranCourant === 'tirage') $('#minimum').scrollIntoView({ behavior: 'smooth', block: 'center' }); // pas derrière le bouton collant
+    if (ecranCourant === 'tirage') $('.budget').scrollIntoView({ behavior: 'smooth', block: 'end' }); // scroll-margin : au-dessus du bouton collant
     return false;
   }
   const noms = items.map((i) => i.nom);
