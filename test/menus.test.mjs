@@ -1,7 +1,7 @@
 // Lancer : node test/menus.test.mjs
 import assert from 'node:assert/strict';
 import { tirer, budgetMinimum } from '../tirage.js';
-import { ROLES_MENU, role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit, produitsCommencantPar } from '../menus.js';
+import { ROLES_MENU, role, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit, produitsCommencantPar, resoudreAjout } from '../menus.js';
 
 const ing = (nom, categorie, quantite, prix, portion, unite = 'g') => ({ nom, categorie, quantite, prix, portion, unite });
 const poulet = ing('poulet', 'Viandes et poissons', 300, 400, 120);
@@ -141,6 +141,11 @@ assert.equal(coutAjouts(['banane'], parNom, new Map([['banane', 1]])), 0);
 const noms2 = ["Huile d'olive", 'Lait demi-écrémé', 'Ail'];
 assert.equal(chercherProduit('huile d’olive', noms2), "Huile d'olive");
 assert.equal(chercherProduit('  AIL ', noms2), 'Ail');
+assert.deepEqual(resoudreAjout('  mouchoirs  en papier ', noms2, []), { nom: 'mouchoirs en papier' }); // libre, gardé tel quel
+assert.deepEqual(resoudreAjout('iPhone câble', noms2, []), { nom: 'iPhone câble' });
+assert.deepEqual(resoudreAjout('MOUCHOIRS', noms2, ['Mouchoirs']), { nom: 'Mouchoirs' }); // même nom : pas de doublon
+assert.deepEqual(resoudreAjout('Sac', noms2, ['Sacs poubelle']), { nom: 'Sac' }); // un début de nom libre ne fusionne pas
+assert.deepEqual(resoudreAjout('ail', noms2, []), { nom: 'Ail' });
 assert.equal(chercherProduit('lait demi-écrémé', noms2), 'Lait demi-écrémé');
 assert.equal(chercherProduit('truc', noms2), null);
 // Un début de nom suffit s'il ne désigne qu'un produit.

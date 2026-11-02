@@ -1,6 +1,6 @@
 import { budgetMinimum, tirerVarie } from './tirage.js';
 import {
-  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, chercherProduit, produitsCommencantPar,
+  ROLES_MENU, paquets, poolMenus, achats, total, composer, completer, incomplets, echanger, substituer, budgetComplet, nettoyer, alerte, horsTirage, relancerChacun, coutAjouts, resoudreAjout,
 } from './menus.js';
 
 const CATEGORIES = [
@@ -182,15 +182,12 @@ function rendreTirage() {
 // Renvoie true si l'article est ajouté (le champ peut alors être vidé).
 function ajouter(saisie) {
   if (!saisie.trim()) return false;
-  let nom = chercherProduit(saisie, [...parNom.keys()]);
-  if (!nom && produitsCommencantPar(saisie, [...parNom.keys()]).length > 1) return message('Plusieurs produits correspondent : précise'), false;
-  if (!nom) {
-    const libre = saisie.trim().replace(/\s+/g, ' ');
-    nom = chercherProduit(libre, etat.ajouts.filter((n) => !parNom.has(n))) ?? libre[0].toLocaleUpperCase('fr') + libre.slice(1);
-  }
+  const { nom, erreur } = resoudreAjout(saisie, [...parNom.keys()], etat.ajouts.filter((n) => !parNom.has(n)));
+  if (erreur) return message(erreur), false;
   // Déjà acheté pour les menus : on ne le réserve pas une deuxième fois.
   if (achatsMenus().has(nom)) return message('Déjà dans la liste'), false;
-  message('');
+  // « sel » devient « Sel fin » : on le dit, pour qu'un article libre tapé en abrégé ne passe pas en douce pour un produit.
+  message(parNom.has(nom) && saisie.trim().toLocaleLowerCase('fr') !== nom.toLocaleLowerCase('fr') ? `Ajouté : ${nom}` : '');
   if (!etat.ajouts.includes(nom)) etat.ajouts.push(nom);
   if (etat.liste) majListe();
   sauver();
@@ -388,18 +385,22 @@ function nbPaquets() {
 const qteArticle = (i, p) => (p > 1 ? `${p}\u00a0×\u00a0${quantite(i)}` : quantite(i));
 const prixArticles = (lignes, pq) => somme(lignes.map((l) => pq(l.nom) * infos(l.nom).prix));
 
+// Lignes regroupées par rayon dans l'ordre du magasin, cochées en bas : [[rayon, [{ l, i }]]].
+function parRayon(lignes) {
+  const groupes = new Map();
+  for (const l of lignes) {
+    const i = infos(l.nom);
+    if (!groupes.has(i.rayon)) groupes.set(i.rayon, []);
+    groupes.get(i.rayon).push({ l, i });
+  }
+  return [...groupes].sort(([a], [b]) => rang(a) - rang(b)).map(([r, xs]) => [r, xs.sort((a, b) => a.l.coche - b.l.coche)]);
+}
+
 function rendreListe() {
   const lignes = articles();
   const pq = nbPaquets();
-  const groupes = new Map();
-  for (const l of lignes) {
-    const r = infos(l.nom).rayon;
-    if (!groupes.has(r)) groupes.set(r, []);
-    groupes.get(r).push(l);
-  }
-  $('#liste').innerHTML = [...groupes.keys()].sort((a, b) => rang(a) - rang(b)).map((r) =>
-    `<div class="carte"><p class="surtitre">${esc(r)}</p>` + groupes.get(r).sort((a, b) => a.coche - b.coche).map((l) => {
-      const i = infos(l.nom);
+  $('#liste').innerHTML = parRayon(lignes).map(([r, xs]) =>
+    `<div class="carte"><p class="surtitre">${esc(r)}</p>` + xs.map(({ l, i }) => {
       const classes = ['article', l.coche && 'coche'].filter(Boolean).join(' ');
       const retirer = etat.ajouts.includes(l.nom) && !pq.menus.has(l.nom)
         ? ` <button class="retirer" data-retirer="${esc(l.nom)}" aria-label="Retirer ${esc(l.nom)}">✕</button>` : '';
@@ -658,10 +659,8 @@ $('#nouveau').addEventListener('click', (e) => {
 $('#partager').addEventListener('click', async () => {
   const lignes = articles();
   const pq = nbPaquets();
-  const texte = [...new Set(lignes.map((l) => infos(l.nom).rayon))]
-    .sort((a, b) => rang(a) - rang(b))
-    .map((r) => `${r}\n` + lignes.filter((l) => infos(l.nom).rayon === r)
-      .map((l) => `${l.coche ? '✓' : '-'} ${l.nom}${infos(l.nom).divers ? '' : ` (${qteArticle(infos(l.nom), pq(l.nom))})`}`).join('\n'))
+  const texte = parRayon(lignes).map(([r, xs]) => `${r}\n` + xs
+    .map(({ l, i }) => `${l.coche ? '✓' : '-'} ${l.nom}${i.divers ? '' : ` (${qteArticle(i, pq(l.nom))})`}`).join('\n'))
     .join('\n\n') + `\n\nTotal : ${euros(prixArticles(lignes, pq))}`;
   try {
     if (navigator.share) await navigator.share({ title: 'Liste de courses', text: texte });

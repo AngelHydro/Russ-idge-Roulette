@@ -62,6 +62,16 @@ export function chercherProduit(saisie, noms) {
 }
 export const produitsCommencantPar = (saisie, noms) => noms.filter((n) => cleSaisie(n).startsWith(cleSaisie(saisie)));
 
+// Article à racheter : un produit du fichier, sinon un article libre (rayon Divers) écrit tel quel,
+// confondu avec un article libre déjà ajouté seulement si c'est le même nom (pas un début de nom).
+export function resoudreAjout(saisie, noms, libres) {
+  const nom = chercherProduit(saisie, noms);
+  if (nom) return { nom };
+  if (produitsCommencantPar(saisie, noms).length > 1) return { erreur: 'Plusieurs produits correspondent : précise' };
+  const libre = saisie.trim().replace(/\s+/g, ' ');
+  return { nom: libres.find((n) => cleSaisie(n) === cleSaisie(libre)) ?? libre };
+}
+
 // Articles à racheter : un paquet chacun, sauf ceux déjà achetés pour les menus ; les noms inconnus sont ignorés.
 export const coutAjouts = (ajouts, parNom, achatsMap) =>
   ajouts.filter((n) => parNom.has(n) && !achatsMap.has(n)).reduce((t, n) => t + parNom.get(n).prix, 0);
