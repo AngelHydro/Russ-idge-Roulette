@@ -7,7 +7,7 @@ const CATEGORIES = [
   'Viandes et poissons', 'Œufs et laitages', 'Légumineuses', 'Féculents', 'Légumes',
   'Fruits', 'Surgelés', 'Desserts', 'Boulangerie', 'Boissons',
 ];
-const RAYONS = ['Fruits et légumes', 'Boucherie', 'Poissonnerie', 'Frais', 'Épicerie', 'Boulangerie', 'Surgelés', 'Boissons'];
+const RAYONS = ['Fruits et légumes', 'Boucherie', 'Poissonnerie', 'Frais', 'Épicerie', 'Boulangerie', 'Surgelés', 'Boissons', 'Divers'];
 const CLE = 'russidge-roulette';
 
 // Tout l'état propre à ce téléphone, sauvé dans le navigateur. Prix en centimes.
@@ -80,8 +80,11 @@ function countsEffectifs(p) {
 }
 
 function articles() {
-  return (etat.liste || []).filter((l) => parNom.has(l.nom));
+  return (etat.liste || []).filter((l) => parNom.has(l.nom) || etat.ajouts.includes(l.nom));
 }
+
+// Un ajout absent du CSV (mouchoirs…) : rayon Divers, sans prix ni quantité, hors budget.
+const infos = (nom) => parNom.get(nom) ?? { nom, rayon: 'Divers', prix: 0, divers: true };
 
 function quantite(i) {
   const q = i.quantite;
@@ -179,8 +182,12 @@ function rendreTirage() {
 // Renvoie true si l'article est ajouté (le champ peut alors être vidé).
 function ajouter(saisie) {
   if (!saisie.trim()) return false;
-  const nom = chercherProduit(saisie, [...parNom.keys()]);
-  if (!nom) return message(produitsCommencantPar(saisie, [...parNom.keys()]).length > 1 ? 'Plusieurs produits correspondent : précise' : 'Produit inconnu'), false;
+  let nom = chercherProduit(saisie, [...parNom.keys()]);
+  if (!nom && produitsCommencantPar(saisie, [...parNom.keys()]).length > 1) return message('Plusieurs produits correspondent : précise'), false;
+  if (!nom) {
+    const libre = saisie.trim().replace(/\s+/g, ' ');
+    nom = chercherProduit(libre, etat.ajouts.filter((n) => !parNom.has(n))) ?? libre[0].toLocaleUpperCase('fr') + libre.slice(1);
+  }
   // Déjà acheté pour les menus : on ne le réserve pas une deuxième fois.
   if (achatsMenus().has(nom)) return message('Déjà dans la liste'), false;
   message('');
@@ -321,7 +328,7 @@ function semaine(d = new Date()) {
 // La liste de courses suit les menus et les ajouts : un article par produit acheté, en gardant les coches.
 function majListe() {
   const coches = new Set((etat.liste || []).filter((l) => l.coche).map((l) => l.nom));
-  const noms = new Set([...achatsMenus().keys(), ...etat.ajouts.filter((n) => parNom.has(n))]);
+  const noms = new Set([...achatsMenus().keys(), ...etat.ajouts]);
   etat.liste = [...noms].map((nom) => ({ nom, coche: coches.has(nom) }));
 }
 
@@ -379,26 +386,26 @@ function nbPaquets() {
   return Object.assign((nom) => a.get(nom) || 1, { menus: a });
 }
 const qteArticle = (i, p) => (p > 1 ? `${p}\u00a0×\u00a0${quantite(i)}` : quantite(i));
-const prixArticles = (lignes, pq) => somme(lignes.map((l) => pq(l.nom) * parNom.get(l.nom).prix));
+const prixArticles = (lignes, pq) => somme(lignes.map((l) => pq(l.nom) * infos(l.nom).prix));
 
 function rendreListe() {
   const lignes = articles();
   const pq = nbPaquets();
   const groupes = new Map();
   for (const l of lignes) {
-    const r = parNom.get(l.nom).rayon;
+    const r = infos(l.nom).rayon;
     if (!groupes.has(r)) groupes.set(r, []);
     groupes.get(r).push(l);
   }
   $('#liste').innerHTML = [...groupes.keys()].sort((a, b) => rang(a) - rang(b)).map((r) =>
     `<div class="carte"><p class="surtitre">${esc(r)}</p>` + groupes.get(r).sort((a, b) => a.coche - b.coche).map((l) => {
-      const i = parNom.get(l.nom);
+      const i = infos(l.nom);
       const classes = ['article', l.coche && 'coche'].filter(Boolean).join(' ');
       const retirer = etat.ajouts.includes(l.nom) && !pq.menus.has(l.nom)
         ? ` <button class="retirer" data-retirer="${esc(l.nom)}" aria-label="Retirer ${esc(l.nom)}">✕</button>` : '';
       return `<div class="${classes}" data-nom="${esc(l.nom)}">
-        <span>${esc(i.nom)} <span class="poids">·&nbsp;${qteArticle(i, pq(l.nom))}</span>${retirer}</span>
-        <span class="prix">${etat.prix === 'kilo' ? prixAffiche(i) : euros(pq(l.nom) * i.prix)}</span></div>`;
+        <span>${esc(i.nom)}${i.divers ? '' : ` <span class="poids">·&nbsp;${qteArticle(i, pq(l.nom))}</span>`}${retirer}</span>
+        <span class="prix">${i.divers ? '—' : etat.prix === 'kilo' ? prixAffiche(i) : euros(pq(l.nom) * i.prix)}</span></div>`;
     }).join('') + '</div>',
   ).join('');
 
@@ -651,10 +658,10 @@ $('#nouveau').addEventListener('click', (e) => {
 $('#partager').addEventListener('click', async () => {
   const lignes = articles();
   const pq = nbPaquets();
-  const texte = [...new Set(lignes.map((l) => parNom.get(l.nom).rayon))]
+  const texte = [...new Set(lignes.map((l) => infos(l.nom).rayon))]
     .sort((a, b) => rang(a) - rang(b))
-    .map((r) => `${r}\n` + lignes.filter((l) => parNom.get(l.nom).rayon === r)
-      .map((l) => `${l.coche ? '✓' : '-'} ${l.nom} (${qteArticle(parNom.get(l.nom), pq(l.nom))})`).join('\n'))
+    .map((r) => `${r}\n` + lignes.filter((l) => infos(l.nom).rayon === r)
+      .map((l) => `${l.coche ? '✓' : '-'} ${l.nom}${infos(l.nom).divers ? '' : ` (${qteArticle(infos(l.nom), pq(l.nom))})`}`).join('\n'))
     .join('\n\n') + `\n\nTotal : ${euros(prixArticles(lignes, pq))}`;
   try {
     if (navigator.share) await navigator.share({ title: 'Liste de courses', text: texte });
@@ -734,7 +741,6 @@ parNom = new Map(base.map((i) => [i.nom, i]));
 if (base.length) {
   if (etat.menus) etat.menus = nettoyer(etat.menus, parNom);
   etat.masques = etat.masques.filter((n) => parNom.has(n));
-  etat.ajouts = etat.ajouts.filter((n) => parNom.has(n));
   sauver();
 }
 // Suggestions pendant la saisie d'un article à racheter : tous les produits du fichier.

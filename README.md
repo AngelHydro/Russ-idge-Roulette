@@ -18,7 +18,7 @@ Le parcours : Tirage → Menus → Liste.
 
 - **Tirage** : nombre de menus et de personnes, nombre d'ingrédients par catégorie (− / +), budget (curseur par 5 €, ou tap sur le montant pour le saisir). Le budget minimum et celui qui permet de compléter tous les menus s'affichent en direct.
 - **Menus** : chaque menu = une protéine, un féculent ou une légumineuse, un légume ; fruits, desserts, boissons et pain sont répartis en à-côtés. Un ingrédient peut resservir dans plusieurs menus si le budget le permet, sinon le menu reste incomplet et l'app le signale. Appui long = sélectionner, puis *Déplacer* (vers un autre menu), *Relancer*, *Relancer le reste* ou *Masquer*.
-- **À racheter** (sur le Tirage) : lait, huile, sel… à ajouter à la main, avec des suggestions pendant la saisie. Leur prix est réservé dans le budget avant la roulette.
+- **À racheter** (sur le Tirage) : lait, huile, sel… à ajouter à la main, avec des suggestions pendant la saisie. Leur prix est réservé dans le budget avant la roulette. Un article hors du fichier (mouchoirs, lessive…) est accepté aussi : il va dans le rayon Divers, sans prix, et ne compte pas dans le budget.
 - **Liste** : regroupée par rayon, avec le nombre de paquets à acheter. Tap = cocher ; tap sur un prix = basculer paquet / kilo. On peut encore ajouter un article ; s'il fait dépasser le budget, la Liste l'indique et propose de relancer le tirage.
 - **Variété** : le tirage évite les ingrédients des derniers tirages (réglable dans les Paramètres, de 0 à 3), sauf s'il ne peut pas faire autrement.
 - **Paramètres** (⚙) : prix au paquet ou au kilo, son du clic, ingrédients masqués.
